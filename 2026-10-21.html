@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FCE 每日 10 分鐘英文</title>
+<script>
+/* =====================================================================
+ LESSON SCHEMA (swap only this object for a new lesson)
+ {
+  date: "YYYY-MM-DD",            // used for localStorage key + completion code
+  topic: "string",               // English topic title
+  topicZh: "string",             // 中文主題
+  minutes: 10,                   // timer length
+  speaking: {
+    part: "Part 1" | "Part 2",
+    prompt: "string",            // examiner question / task
+    followUps: ["string"],       // optional extra questions
+    modelAnswer: "string",
+    tipZh: "string",             // 中文提示
+    phrases: [{ en, zh }]        // 3-4 useful phrases
+  },
+  vocab: [{ word, pos, zh, example }],   // 8 items, flip cards
+  grammar: {
+    title: "string", explanationZh: "string",
+    examples: [{ en, noteZh }]           // 3-4
+  },
+  useOfEnglish: {
+    type: "Part 1" | "Part 2", instructionZh: "string",
+    text: "string with gaps marked {1} {2} ...",
+    gaps: [{ n, options: [..] (Part 1) , answer: "string", explanationZh }]
+         // Part 2 (open cloze): omit options; learner types
+  },
+  quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 10
+ }
+===================================================================== */
+const LESSON = {
+  date: "2026-10-21",
+  topic: "Work & daily routine",
+  topicZh: "工作與日常作息",
+  minutes: 10,
+  speaking: {
+    part: "Part 1",
+    prompt: "Can you describe a typical working day for you?",
+    followUps: ["What do you usually do during your lunch break?", "Would you prefer to work from home or in an office? Why?"],
+    modelAnswer: "Well, on a typical day I get up at around seven and commute to the office by MRT, which takes about forty minutes. The first thing I do is check my emails and plan my priorities for the day. My workload can be quite heavy, especially when we're approaching a deadline, so I try not to put off difficult tasks. In the afternoon I usually have meetings with my team. I've worked there for three years now, and to be honest, I've become much better at managing my time. Once I get home, I like to have dinner with my family and take it easy.",
+    tipZh: "Part 1 回答約 20–30 秒即可：先直接回答，再補一個理由或例子。注意時態：習慣用現在簡單式，經驗用現在完成式。",
+    phrases: [
+      { en: "On a typical day, I…", zh: "在平常的一天裡，我……" },
+      { en: "The first thing I do is…", zh: "我做的第一件事是……" },
+      { en: "It depends on how busy I am, but generally…", zh: "看我有多忙，但大致上……" },
+      { en: "To be honest, I've become much better at…", zh: "老實說，我在……方面進步很多。" }
+    ]
+  },
+  vocab: [
+    { word: "commute", pos: "verb / noun", zh: "通勤", example: "I commute to work by train, and the journey takes about an hour." },
+    { word: "workload", pos: "noun", zh: "工作量", example: "My workload has increased a lot since my colleague left." },
+    { word: "meet a deadline", pos: "phrase", zh: "趕上截止期限", example: "We worked late every night to meet the deadline." },
+    { word: "put off", pos: "phrasal verb", zh: "拖延；延後", example: "Stop putting off that report and just start it." },
+    { word: "take on", pos: "phrasal verb", zh: "承擔（工作、責任）", example: "She has taken on too many projects this month." },
+    { word: "catch up on", pos: "phrasal verb", zh: "補做；趕上（落後的事）", example: "I spent Saturday morning catching up on emails." },
+    { word: "get through", pos: "phrasal verb", zh: "完成（大量工作）；熬過", example: "I have a lot of paperwork to get through before Friday." },
+    { word: "hectic", pos: "adjective", zh: "忙亂的；繁忙的", example: "Mondays are always hectic in our office." }
+  ],
+  grammar: {
+    title: "Present Perfect vs Past Simple",
+    explanationZh: "過去簡單式（I worked）用於「已結束、有明確過去時間」的動作，常搭配 yesterday、last week、in 2020、ago。現在完成式（I have worked）連結過去與現在：經驗（ever/never）、到現在仍持續（for/since）、或對現在有影響的近期動作（just/already/yet），且不能與明確的過去時間連用。",
+    examples: [
+      { en: "I started this job in 2023.", noteZh: "明確過去時間（in 2023）→ 過去簡單式" },
+      { en: "I've worked here since 2023.", noteZh: "從過去持續到現在（since）→ 現在完成式" },
+      { en: "Have you ever worked night shifts?", noteZh: "詢問人生經驗（ever）→ 現在完成式" },
+      { en: "I've just finished the report, so I can help you now.", noteZh: "剛完成且影響現在 → 現在完成式；✗ I've finished it yesterday." }
+    ]
+  },
+  useOfEnglish: {
+    type: "Part 1",
+    instructionZh: "FCE Reading & Use of English Part 1：選出最適合填入空格的字（A/B/C/D）。",
+    text: "Working from home has {1} many people's daily routines. Instead of spending hours in traffic, employees can now {2} the time they save to exercise or spend with family. However, it can be difficult to {3} a clear line between work and personal life. Experts suggest that home workers should set {4} regular hours and take short breaks. Otherwise, they may end up working late and {5} out more quickly than they would in an office. Above {6}, it is important to have a dedicated workspace.",
+    gaps: [
+      { n: 1, options: ["transformed", "converted", "turned", "exchanged"], answer: "transformed", explanationZh: "transform a routine＝徹底改變；convert 多指轉換形式/用途。" },
+      { n: 2, options: ["devote", "spend", "give", "pass"], answer: "devote", explanationZh: "devote time to doing sth（把時間投入於）；spend 不接 to + 動詞原形。" },
+      { n: 3, options: ["draw", "make", "paint", "write"], answer: "draw", explanationZh: "固定搭配 draw a line between A and B（劃清界線）。" },
+      { n: 4, options: ["up", "out", "off", "in"], answer: "up", explanationZh: "set up regular hours＝建立固定工時。" },
+      { n: 5, options: ["burning", "wearing", "running", "tiring"], answer: "burning", explanationZh: "burn out＝過勞、精疲力盡。" },
+      { n: 6, options: ["all", "most", "everything", "anything"], answer: "all", explanationZh: "固定片語 Above all（最重要的是）。" }
+    ]
+  },
+  quiz: [
+    { id: "q1", q: "I ___ in this company for five years, and I still enjoy it.", options: ["work", "worked", "have worked", "am working"], answer: 2, explanationZh: "for five years 且仍在職 → 現在完成式。" },
+    { id: "q2", q: "She ___ the company in 2019.", options: ["has joined", "joined", "has been joining", "joins"], answer: 1, explanationZh: "in 2019 是明確過去時間 → 過去簡單式。" },
+    { id: "q3", q: "Have you ___ the sales report yet?", options: ["finish", "finished", "finishing", "to finish"], answer: 1, explanationZh: "現在完成式 have + 過去分詞 finished；yet 用於疑問/否定。" },
+    { id: "q4", q: "My ___ is so heavy this week that I can't take any days off.", options: ["workload", "workplace", "workforce", "workshop"], answer: 0, explanationZh: "workload＝工作量；workforce 是勞動力、workplace 是工作場所。" },
+    { id: "q5", q: "Don't ___ calling the client – do it now.", options: ["put up", "put off", "put out", "put on"], answer: 1, explanationZh: "put off＝拖延；後接 V-ing。" },
+    { id: "q6", q: "I'm too busy to ___ any extra responsibilities at the moment.", options: ["take on", "take up", "take over", "take in"], answer: 0, explanationZh: "take on＝承擔（工作、責任）。take over 是接管。" },
+    { id: "q7", q: "After my holiday, I had hundreds of emails to ___.", options: ["catch up", "get through", "run into", "set off"], answer: 1, explanationZh: "get through＝處理完（大量工作）；catch up 需加 on 才能接受詞。" },
+    { id: "q8", q: "We worked all weekend to ___ the deadline.", options: ["reach", "meet", "make up", "arrive"], answer: 1, explanationZh: "固定搭配 meet a deadline。" },
+    { id: "q9", q: "How long does your ___ to work take?", options: ["commute", "travel", "trip", "way"], answer: 0, explanationZh: "commute 指每天上下班的通勤；travel 為不可數泛稱，不用 your travel to work。" },
+    { id: "q10", q: "It was such a ___ day that I didn't even have time for lunch.", options: ["hectic", "relaxed", "boring", "spare"], answer: 0, explanationZh: "hectic＝忙亂的，與「沒時間吃午餐」語意相符。" }
+  ]
+};
+</script>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#1f2937;--mute:#6b7280;--pri:#4f46e5;--ok:#16a34a;--bad:#dc2626;--soft:#eef2ff;--r:16px}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border-bottom:1px solid #e5e7eb;padding:10px 16px calc(10px) 16px;padding-top:max(10px,env(safe-area-inset-top))}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:760px;margin:auto}
+h1{font-size:1.05rem;margin:0}
+.sub{font-size:.8rem;color:var(--mute)}
+.timer{display:flex;align-items:center;gap:6px}
+.time{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.1rem;min-width:56px;text-align:right}
+.time.done{color:var(--bad)}
+main{max-width:760px;margin:auto;padding:16px;padding-bottom:80px}
+section{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+h2{font-size:1.1rem;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.badge{background:var(--soft);color:var(--pri);border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:600}
+.zh{color:var(--mute);font-size:.92rem}
+button{font:inherit;cursor:pointer;border:none;border-radius:10px;padding:8px 14px;background:var(--pri);color:#fff;font-weight:600;touch-action:manipulation}
+button.ghost{background:var(--soft);color:var(--pri)}
+button.sm{padding:4px 10px;font-size:.85rem}
+.prompt{background:var(--soft);border-left:4px solid var(--pri);padding:10px 12px;border-radius:8px;font-weight:600}
+.model{margin-top:10px;padding:12px;border:1px dashed #c7d2fe;border-radius:10px}
+ul.phr{padding-left:0;list-style:none;margin:8px 0}
+ul.phr li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.flip{perspective:800px;height:190px;cursor:pointer}
+.inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.on .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;padding:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border:1px solid #e0e7ff;background:linear-gradient(160deg,#fff,#eef2ff)}
+.back{transform:rotateY(180deg);background:#fff;font-size:.85rem;justify-content:space-between}
+.word{font-size:1.15rem;font-weight:700}
+.pos{font-size:.75rem;color:var(--mute)}
+.ex{margin:10px 0;padding:10px;background:#f8fafc;border-radius:8px}
+.gap{display:inline-block;min-width:70px;border-bottom:2px solid var(--pri);text-align:center;font-weight:700;color:var(--pri);padding:0 4px}
+.gap.ok{color:var(--ok);border-color:var(--ok)} .gap.bad{color:var(--bad);border-color:var(--bad)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.opt{background:#fff;color:var(--ink);border:1.5px solid #d1d5db;text-align:left;font-weight:500}
+.opt.ok{border-color:var(--ok);background:#dcfce7}.opt.bad{border-color:var(--bad);background:#fee2e2}
+.opt:disabled{cursor:default}
+.fb{font-size:.9rem;margin-top:4px;padding:8px 10px;border-radius:8px}
+.fb.ok{background:#f0fdf4;color:#166534}.fb.bad{background:#fef2f2;color:#991b1b}
+.bar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:8px 0 14px}
+.bar>div{height:100%;background:var(--pri);width:0;transition:width .3s}
+.gq{margin-bottom:14px}
+.code{font-family:ui-monospace,Menlo,monospace;background:#111827;color:#f9fafb;padding:10px;border-radius:8px;word-break:break-all;margin:8px 0}
+.score{font-size:2.4rem;font-weight:800;color:var(--pri);text-align:center}
+.hidden{display:none}
+@media(max-width:420px){.opts{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.flip{height:210px}}
+</style>
+</head>
+<body>
+<header><div class="hrow">
+  <div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
+  <div class="timer"><span class="time" id="time"></span><button class="sm" id="tbtn">開始</button><button class="sm ghost" id="treset">重設</button></div>
+</div></header>
+<main>
+  <section id="s-speak"></section>
+  <section id="s-vocab"></section>
+  <section id="s-gram"></section>
+  <section id="s-uoe"></section>
+  <section id="s-quiz"></section>
+  <section id="s-end" class="hidden"></section>
+</main>
+<script>
+(function(){
+const L = LESSON, $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'fce-lesson-' + L.date;
+let state = {}; try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) {}
+state.quiz = state.quiz || {}; state.uoe = state.uoe || {};
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} };
+
+/* speech */
+let voice = null;
+function pickVoice(){ const vs = window.speechSynthesis ? speechSynthesis.getVoices() : []; voice = vs.find(v=>v.lang==='en-GB') || vs.find(v=>/^en[-_]GB/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null; }
+if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(t){ if(!window.speechSynthesis){ alert('此瀏覽器不支援語音朗讀'); return; } speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='en-GB'; if(voice) u.voice=voice; u.rate=0.92; speechSynthesis.speak(u); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if(b){ e.stopPropagation(); speak(b.getAttribute('data-say')); } });
+
+/* header + timer */
+$('title').textContent = '📘 FCE ' + L.date;
+$('subtitle').textContent = L.topic + '｜' + L.topicZh;
+let left = state.timeLeft != null ? state.timeLeft : (L.minutes||10)*60, tid = null;
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+function drawT(){ $('time').textContent = fmt(left); $('time').classList.toggle('done', left<=0); }
+$('tbtn').onclick = () => { if(tid){ clearInterval(tid); tid=null; $('tbtn').textContent='繼續'; return; }
+  if(left<=0) return; $('tbtn').textContent='暫停';
+  tid = setInterval(()=>{ left--; state.timeLeft=left; drawT(); if(left%5===0) save(); if(left<=0){ clearInterval(tid); tid=null; $('tbtn').textContent='時間到'; save(); } },1000); };
+$('treset').onclick = () => { clearInterval(tid); tid=null; left=(L.minutes||10)*60; state.timeLeft=left; save(); $('tbtn').textContent='開始'; drawT(); };
+drawT();
+
+/* 1 speaking */
+const S = L.speaking;
+$('s-speak').innerHTML = `<h2>🗣️ 1. 口說 Speaking <span class="badge">${esc(S.part)}</span></h2>
+<div class="prompt">${esc(S.prompt)} <button class="sm ghost" data-say="${esc(S.prompt)}">🔊</button></div>
+${(S.followUps||[]).length?`<p class="zh">延伸問題：</p><ul>${S.followUps.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:''}
+<p class="zh">💡 ${esc(S.tipZh||'')}</p>
+<p class="zh">先自己大聲回答一次（約 30 秒），再看範例。</p>
+<button class="ghost" id="showModel">顯示範例回答</button>
+<div class="model hidden" id="model"><p>${esc(S.modelAnswer)}</p><button data-say="${esc(S.modelAnswer)}">🔊 聆聽範例</button></div>
+<h3 style="font-size:1rem;margin-top:16px">實用句型</h3>
+<ul class="phr">${S.phrases.map(p=>`<li><div><b>${esc(p.en)}</b><div class="zh">${esc(p.zh)}</div></div><button class="sm ghost" data-say="${esc(p.en)}">🔊</button></li>`).join('')}</ul>
+<button class="ghost sm" data-say="${esc(S.phrases.map(p=>p.en).join('. '))}">🔊 全部句型</button>`;
+$('showModel').onclick = () => { $('model').classList.toggle('hidden'); };
+
+/* 2 vocab */
+$('s-vocab').innerHTML = `<h2>📚 2. 單字 Vocabulary <span class="badge">${L.vocab.length} 個</span></h2><p class="zh">點卡片翻面看中文與例句。</p>
+<div class="grid">${L.vocab.map(v=>`<div class="flip"><div class="inner">
+<div class="face"><div class="word">${esc(v.word)}</div><div class="pos">${esc(v.pos)}</div><button class="sm ghost" style="margin-top:10px" data-say="${esc(v.word)}">🔊</button></div>
+<div class="face back"><div><b>${esc(v.word)}</b> <span class="zh">${esc(v.zh)}</span></div><div style="font-style:italic">${esc(v.example)}</div><button class="sm ghost" data-say="${esc(v.example)}">🔊 例句</button></div>
+</div></div>`).join('')}</div>`;
+document.querySelectorAll('.flip').forEach(c => c.onclick = () => c.classList.toggle('on'));
+
+/* 3 grammar */
+const G = L.grammar;
+$('s-gram').innerHTML = `<h2>✏️ 3. 文法 Grammar</h2><h3 style="font-size:1rem;margin:0">${esc(G.title)}</h3><p>${esc(G.explanationZh)}</p>
+${G.examples.map(x=>`<div class="ex"><b>${esc(x.en)}</b> <button class="sm ghost" data-say="${esc(x.en)}">🔊</button><div class="zh">${esc(x.noteZh)}</div></div>`).join('')}`;
+
+/* 4 use of english */
+const U = L.useOfEnglish;
+const txt = esc(U.text).replace(/\{(\d+)\}/g, (m,n)=>`<span class="gap" id="gap${n}">(${n})</span>`);
+$('s-uoe').innerHTML = `<h2>📖 4. Use of English <span class="badge">${esc(U.type)}</span></h2><p class="zh">${esc(U.instructionZh)}</p><p>${txt}</p>
+${U.gaps.map(g=>`<div class="gq" id="ug${g.n}"><b>(${g.n})</b>${g.options?`<div class="opts">${g.options.map((o,i)=>`<button class="opt" data-n="${g.n}" data-v="${esc(o)}">${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`:
+`<div style="display:flex;gap:8px;margin:6px 0"><input data-n="${g.n}" autocapitalize="off" autocorrect="off" style="flex:1;font:inherit;padding:8px;border:1.5px solid #d1d5db;border-radius:8px"><button class="sm" data-chk="${g.n}">檢查</button></div>`}<div class="fbx"></div></div>`).join('')}`;
+function answerGap(n, v){
+  const g = U.gaps.find(x=>x.n==n); if(!g) return;
+  const ok = v.trim().toLowerCase() === g.answer.toLowerCase();
+  state.uoe[n] = v; save();
+  const box = $('ug'+n), gap = $('gap'+n);
+  box.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; if(b.dataset.v===g.answer) b.classList.add('ok'); else if(b.dataset.v===v) b.classList.add('bad'); });
+  const inp = box.querySelector('input'); if(inp){ inp.value=v; inp.disabled=true; }
+  if(gap){ gap.textContent = g.answer; gap.classList.add(ok?'ok':'bad'); }
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'✅ 正確！':'❌ 正確答案：'+esc(g.answer)+'。'} ${esc(g.explanationZh||'')}</div>`;
+}
+$('s-uoe').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerGap(b.dataset.n,b.dataset.v);
+  const c=e.target.closest('[data-chk]'); if(c){ const i=$('ug'+c.dataset.chk).querySelector('input'); if(i.value.trim()) answerGap(c.dataset.chk,i.value); } });
+Object.keys(state.uoe).forEach(n=>answerGap(n,state.uoe[n]));
+
+/* 5 quiz */
+const Q = L.quiz;
+$('s-quiz').innerHTML = `<h2>🎯 5. 小測驗 Quiz</h2><div class="sub" id="qprog"></div><div class="bar"><div id="qbar"></div></div>
+${Q.map((q,i)=>`<div class="gq" id="qq${i}"><b>${i+1}. ${esc(q.q)}</b><div class="opts">${q.options.map((o,j)=>`<button class="opt" data-q="${i}" data-j="${j}">${'ABCD'[j]}. ${esc(o)}</button>`).join('')}</div><div class="fbx"></div></div>`).join('')}
+<button id="finish" style="width:100%">完成並查看結果</button>`;
+function answerQ(i, j){
+  const q = Q[i], box = $('qq'+i), ok = j===q.answer;
+  state.quiz[q.id] = j; save();
+  box.querySelectorAll('.opt').forEach((b,k)=>{ b.disabled=true; if(k===q.answer) b.classList.add('ok'); else if(k===j) b.classList.add('bad'); });
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'✅ 正確！':'❌ 答錯了，正確答案：'+esc(q.options[q.answer])+'。'} ${esc(q.explanationZh)}</div>`;
+  prog();
+}
+function prog(){ const n = Q.filter(q=>q.id in state.quiz).length; $('qprog').textContent = `進度 ${n}/${Q.length}`; $('qbar').style.width = (n/Q.length*100)+'%'; if(n===Q.length) showEnd(); }
+$('s-quiz').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerQ(+b.dataset.q, +b.dataset.j); });
+Q.forEach((q,i)=>{ if(q.id in state.quiz) answerQ(i, state.quiz[q.id]); }); prog();
+$('finish').onclick = () => { showEnd(); $('s-end').scrollIntoView({behavior:'smooth'}); };
+
+/* end */
+function showEnd(){
+  const missed = Q.filter(q=>state.quiz[q.id]!==q.answer);
+  const score = Q.length - missed.length;
+  state.score = score; state.completedAt = state.completedAt || new Date().toISOString(); save();
+  const code = `FCE-${L.date} ${score}/${Q.length} missed:${missed.length?missed.map(q=>q.id).join(','):'none'}`;
+  const e = $('s-end'); e.classList.remove('hidden');
+  e.innerHTML = `<h2>🏁 完成！</h2><div class="score">${score}/${Q.length}</div>
+${missed.length?`<p><b>需要複習的題目：</b></p><ul>${missed.map(q=>`<li><b>${esc(q.id)}</b> ${esc(q.q)}<br><span class="zh">${q.id in state.quiz?'你的答案：'+esc(q.options[state.quiz[q.id]])+'；':'未作答；'}正解：${esc(q.options[q.answer])}</span></li>`).join('')}</ul>`:'<p>全對，太棒了！🎉</p>'}
+<p class="zh">請複製以下完成碼，貼回家教聊天室：</p><div class="code" id="code">${esc(code)}</div>
+<button id="copy">📋 複製完成碼</button> <button class="ghost" id="redo">重做今日課程</button>`;
+  $('copy').onclick = () => { const done=()=>{$('copy').textContent='✅ 已複製';};
+    if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(code).then(done,fallback); else fallback();
+    function fallback(){ const t=document.createElement('textarea'); t.value=code; document.body.appendChild(t); t.select(); try{document.execCommand('copy'); done();}catch(x){ alert(code); } t.remove(); } };
+  $('redo').onclick = () => { if(confirm('確定要清除今日進度重新開始？')){ localStorage.removeItem(KEY); location.reload(); } };
+}
+})();
+</script>
+</body>
+</html>
