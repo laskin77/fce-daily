@@ -33,6 +33,10 @@
   },
   quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 10
  }
+ SCORING: quiz = 10 pts per question (score 0-100, shown live as 得分 X / 10);
+ Use of English scored separately (X / number of gaps).
+ Completion code: FCE-<date> quiz:<X>/10 uoe:<Y>/6 score:<0-100> missed:q3,q7  (or missed:none)
+ ASSET: header + end screen use relative image "assets/monkey.jpg" (must exist next to the html).
 ===================================================================== */
 const LESSON = {
   date: "2026-10-21",
@@ -100,58 +104,94 @@ const LESSON = {
 };
 </script>
 <style>
-:root{--bg:#f5f7fb;--card:#fff;--ink:#1f2937;--mute:#6b7280;--pri:#4f46e5;--ok:#16a34a;--bad:#dc2626;--soft:#eef2ff;--r:16px}
+:root{--paper:#f0ece0;--paper2:#e8e1d0;--brown:#6b4a35;--sage:#8a9a7b;--ink:#3a3632;--mute:#857a6e;
+--serif:Georgia,"Times New Roman","Noto Serif TC",serif;--sans:"PingFang TC","Noto Sans TC",-apple-system,"Helvetica Neue",sans-serif;
+--wob:255px 15px 225px 15px/15px 225px 15px 255px}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%}
-header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border-bottom:1px solid #e5e7eb;padding:10px 16px calc(10px) 16px;padding-top:max(10px,env(safe-area-inset-top))}
-.hrow{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:760px;margin:auto}
-h1{font-size:1.05rem;margin:0}
-.sub{font-size:.8rem;color:var(--mute)}
-.timer{display:flex;align-items:center;gap:6px}
-.time{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.1rem;min-width:56px;text-align:right}
-.time.done{color:var(--bad)}
-main{max-width:760px;margin:auto;padding:16px;padding-bottom:80px}
-section{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-h2{font-size:1.1rem;margin:0 0 10px;display:flex;align-items:center;gap:8px}
-.badge{background:var(--soft);color:var(--pri);border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:600}
+html{background:var(--paper)}
+body{margin:0;font-family:var(--sans);color:var(--ink);line-height:1.8;-webkit-text-size-adjust:100%;
+background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .22 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");letter-spacing:.01em}
+.hero{max-width:760px;margin:auto;padding:max(28px,env(safe-area-inset-top)) 24px 0;text-align:center}
+.art{height:170px;background:url(assets/monkey.jpg) no-repeat center 82%/auto 380px;mix-blend-mode:multiply;
+-webkit-mask-image:radial-gradient(ellipse 55% 60% at 50% 55%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 55% 60% at 50% 55%,#000 55%,transparent 100%)}
+h1{font-family:var(--serif);font-weight:400;text-transform:uppercase;letter-spacing:.32em;font-size:1.25rem;color:var(--brown);margin:14px 0 4px}
+.sub{font-size:.85rem;color:var(--mute);letter-spacing:.08em}
+header{position:sticky;top:0;z-index:10;background:rgba(240,236,224,.93);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:10px 20px;padding-top:max(10px,env(safe-area-inset-top));margin-top:18px}
+header::after{content:"";position:absolute;left:8%;right:8%;bottom:0;height:1px;background:var(--brown);opacity:.35;border-radius:50%;transform:rotate(-.2deg)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:auto;flex-wrap:wrap}
+.live{font-family:var(--serif);color:var(--brown);font-size:1rem;letter-spacing:.06em}
+.live b{font-size:1.35rem;font-weight:400}
+.timer{display:flex;align-items:center;gap:8px}
+.time{font-family:var(--serif);font-variant-numeric:tabular-nums;font-size:1.2rem;min-width:58px;text-align:right;color:var(--ink);letter-spacing:.05em}
+.time.done{color:var(--brown);text-decoration:underline wavy var(--sage)}
+main{max-width:760px;margin:auto;padding:28px 22px 100px}
+section{padding:34px 4px 40px;margin:0}
+section+section{border-top:0}
+section::before{content:"";display:block;width:56px;height:6px;margin:0 auto 34px;background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 6'%3E%3Cpath d='M1 3.5c9-2 17 1.5 27-.5s17-1.5 27 .5' fill='none' stroke='%238a9a7b' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E")}
+section:first-child::before{display:none}
+h2{font-family:var(--serif);font-weight:400;font-size:.82rem;text-transform:uppercase;letter-spacing:.28em;color:var(--brown);margin:0 0 22px;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+h2 .t{position:relative;padding-bottom:8px}
+h2 .t::after{content:"";position:absolute;left:0;bottom:0;width:34px;height:1.5px;background:var(--brown);opacity:.7;border-radius:2px 40% 3px 50%;transform:rotate(-1deg)}
+h3{font-family:var(--serif);font-weight:400;font-size:1.02rem;letter-spacing:.04em;color:var(--ink);margin:22px 0 8px}
+.badge{font-family:var(--sans);font-size:.72rem;letter-spacing:.1em;color:var(--sage);text-transform:none;border:1px solid var(--sage);padding:0 9px;border-radius:var(--wob)}
 .zh{color:var(--mute);font-size:.92rem}
-button{font:inherit;cursor:pointer;border:none;border-radius:10px;padding:8px 14px;background:var(--pri);color:#fff;font-weight:600;touch-action:manipulation}
-button.ghost{background:var(--soft);color:var(--pri)}
-button.sm{padding:4px 10px;font-size:.85rem}
-.prompt{background:var(--soft);border-left:4px solid var(--pri);padding:10px 12px;border-radius:8px;font-weight:600}
-.model{margin-top:10px;padding:12px;border:1px dashed #c7d2fe;border-radius:10px}
-ul.phr{padding-left:0;list-style:none;margin:8px 0}
-ul.phr li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
-.flip{perspective:800px;height:190px;cursor:pointer}
-.inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+p{margin:.7em 0}
+button{font:inherit;font-size:.95rem;cursor:pointer;border:1.2px solid var(--brown);border-radius:var(--wob);padding:7px 16px;background:transparent;color:var(--brown);letter-spacing:.06em;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .2s}
+button:active{background:var(--paper2)}
+button.solid{background:var(--brown);color:var(--paper)}
+button.ghost{border-color:rgba(107,74,53,.4)}
+button.sm{padding:3px 11px;font-size:.85rem}
+button:disabled{cursor:default}
+.prompt{font-family:var(--serif);font-size:1.12rem;line-height:1.7;padding:6px 0 6px 18px;border-left:1.5px solid var(--sage);border-radius:0 0 0 30% / 0 0 0 4%}
+.model{margin-top:16px;padding:16px 18px;border:1px dashed rgba(107,74,53,.45);border-radius:var(--wob);font-family:var(--serif)}
+ul{padding-left:1.2em}
+ul.phr{padding-left:0;list-style:none;margin:8px 0 14px}
+ul.phr li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(107,74,53,.15)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:16px}
+.flip{perspective:900px;height:200px;cursor:pointer}
+.inner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
 .flip.on .inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;padding:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border:1px solid #e0e7ff;background:linear-gradient(160deg,#fff,#eef2ff)}
-.back{transform:rotateY(180deg);background:#fff;font-size:.85rem;justify-content:space-between}
-.word{font-size:1.15rem;font-weight:700}
-.pos{font-size:.75rem;color:var(--mute)}
-.ex{margin:10px 0;padding:10px;background:#f8fafc;border-radius:8px}
-.gap{display:inline-block;min-width:70px;border-bottom:2px solid var(--pri);text-align:center;font-weight:700;color:var(--pri);padding:0 4px}
-.gap.ok{color:var(--ok);border-color:var(--ok)} .gap.bad{color:var(--bad);border-color:var(--bad)}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
-.opt{background:#fff;color:var(--ink);border:1.5px solid #d1d5db;text-align:left;font-weight:500}
-.opt.ok{border-color:var(--ok);background:#dcfce7}.opt.bad{border-color:var(--bad);background:#fee2e2}
-.opt:disabled{cursor:default}
-.fb{font-size:.9rem;margin-top:4px;padding:8px 10px;border-radius:8px}
-.fb.ok{background:#f0fdf4;color:#166534}.fb.bad{background:#fef2f2;color:#991b1b}
-.bar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:8px 0 14px}
-.bar>div{height:100%;background:var(--pri);width:0;transition:width .3s}
-.gq{margin-bottom:14px}
-.code{font-family:ui-monospace,Menlo,monospace;background:#111827;color:#f9fafb;padding:10px;border-radius:8px;word-break:break-all;margin:8px 0}
-.score{font-size:2.4rem;font-weight:800;color:var(--pri);text-align:center}
+.face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;border:1.2px solid rgba(107,74,53,.5);border-radius:var(--wob);background:rgba(250,247,239,.6);padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;font-size:.9rem}
+.face.back{transform:rotateY(180deg);background:rgba(232,225,208,.55);justify-content:space-between}
+.word{font-family:var(--serif);font-size:1.3rem;color:var(--brown);letter-spacing:.03em}
+.pos{font-size:.78rem;color:var(--sage);letter-spacing:.1em}
+.ex{padding:12px 0;border-bottom:1px solid rgba(107,74,53,.15)}
+.ex b,.gq>b{font-family:var(--serif);font-weight:400;font-size:1.04rem}
+.uoetext{font-family:var(--serif);font-size:1.08rem;line-height:2.1}
+.gap{display:inline-block;min-width:3.2em;text-align:center;color:var(--mute);border-bottom:1.2px solid var(--brown);border-radius:0 0 40% 60%/0 0 3px 2px;padding:0 4px;line-height:1.5}
+.gap.ok{color:var(--sage);border-color:var(--sage)}
+.gap.bad{color:var(--brown);font-style:italic}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.opt{text-align:left;border-color:rgba(107,74,53,.35);color:var(--ink);padding:10px 14px}
+.opt.ok{border-color:var(--sage);background:rgba(138,154,123,.18);color:var(--ink)}
+.opt.bad{border-color:var(--brown);background:rgba(107,74,53,.1);text-decoration:line-through;text-decoration-color:rgba(107,74,53,.6)}
+.fb{font-size:.9rem;padding:8px 2px 4px;color:var(--mute)}
+.fb.ok b{color:var(--sage)} .fb.bad b{color:var(--brown)}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;color:var(--mute)}
+.qscore{font-family:var(--serif);color:var(--brown);font-size:1.1rem;letter-spacing:.05em}
+.bar{height:3px;background:rgba(107,74,53,.13);border-radius:3px;overflow:hidden;margin:8px 0 26px}
+.bar>div{height:100%;background:var(--sage);width:0;transition:width .3s}
+.gq{margin-bottom:26px}
+.endart{width:150px;height:110px;margin:0 auto;background:url(assets/monkey.jpg) no-repeat center 81%/auto 260px;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(closest-side,#000 65%,transparent);mask-image:radial-gradient(closest-side,#000 65%,transparent)}
+.score{font-family:var(--serif);text-align:center;color:var(--brown);font-size:4.6rem;line-height:1;margin:16px 0 4px;letter-spacing:.02em}
+.score small{font-size:1.2rem;color:var(--mute)}
+.scorelbl{text-align:center;text-transform:uppercase;letter-spacing:.3em;font-size:.72rem;color:var(--mute);font-family:var(--serif)}
+.subscores{display:flex;justify-content:center;gap:36px;margin:22px 0 10px;text-align:center}
+.subscores div{font-family:var(--serif);font-size:1.5rem;color:var(--ink)}
+.subscores span{display:block;font-family:var(--sans);font-size:.78rem;color:var(--mute);letter-spacing:.1em}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:.88rem;background:rgba(232,225,208,.6);color:var(--ink);padding:12px 14px;border:1px dashed rgba(107,74,53,.45);border-radius:var(--wob);word-break:break-all;margin:10px 0 14px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
 .hidden{display:none}
-@media(max-width:420px){.opts{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.flip{height:210px}}
+input{font:inherit;padding:8px 4px;border:none;border-bottom:1.2px solid var(--brown);background:transparent;color:var(--ink);border-radius:0;outline:none}
+@media(max-width:480px){.opts{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr;gap:12px}.flip{height:220px}.art{height:150px}h1{letter-spacing:.22em;font-size:1.1rem}.score{font-size:3.8rem}}
+@media(min-width:768px){main{padding-left:40px;padding-right:40px}.art{height:200px;background-size:auto 440px}}
 </style>
 </head>
 <body>
+<div class="hero"><div class="art" role="img" aria-label="monkey reading a book"></div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
 <header><div class="hrow">
-  <div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
-  <div class="timer"><span class="time" id="time"></span><button class="sm" id="tbtn">開始</button><button class="sm ghost" id="treset">重設</button></div>
+  <div class="live" id="live">得分 <b id="liveScore">0</b> / 10</div>
+  <div class="timer"><span class="time" id="time"></span><button class="sm solid" id="tbtn">開始</button><button class="sm ghost" id="treset">重設</button></div>
 </div></header>
 <main>
   <section id="s-speak"></section>
@@ -178,7 +218,7 @@ function speak(t){ if(!window.speechSynthesis){ alert('此瀏覽器不支援語�
 document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if(b){ e.stopPropagation(); speak(b.getAttribute('data-say')); } });
 
 /* header + timer */
-$('title').textContent = '📘 FCE ' + L.date;
+$('title').textContent = 'FCE · ' + L.date;
 $('subtitle').textContent = L.topic + '｜' + L.topicZh;
 let left = state.timeLeft != null ? state.timeLeft : (L.minutes||10)*60, tid = null;
 const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
@@ -191,20 +231,20 @@ drawT();
 
 /* 1 speaking */
 const S = L.speaking;
-$('s-speak').innerHTML = `<h2>🗣️ 1. 口說 Speaking <span class="badge">${esc(S.part)}</span></h2>
+$('s-speak').innerHTML = `<h2><span class="t">I · 口說 Speaking</span> <span class="badge">${esc(S.part)}</span></h2>
 <div class="prompt">${esc(S.prompt)} <button class="sm ghost" data-say="${esc(S.prompt)}">🔊</button></div>
 ${(S.followUps||[]).length?`<p class="zh">延伸問題：</p><ul>${S.followUps.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:''}
 <p class="zh">💡 ${esc(S.tipZh||'')}</p>
 <p class="zh">先自己大聲回答一次（約 30 秒），再看範例。</p>
 <button class="ghost" id="showModel">顯示範例回答</button>
-<div class="model hidden" id="model"><p>${esc(S.modelAnswer)}</p><button data-say="${esc(S.modelAnswer)}">🔊 聆聽範例</button></div>
-<h3 style="font-size:1rem;margin-top:16px">實用句型</h3>
+<div class="model hidden" id="model"><p>${esc(S.modelAnswer)}</p><button class="sm" data-say="${esc(S.modelAnswer)}">🔊 聆聽範例</button></div>
+<h3>實用句型</h3>
 <ul class="phr">${S.phrases.map(p=>`<li><div><b>${esc(p.en)}</b><div class="zh">${esc(p.zh)}</div></div><button class="sm ghost" data-say="${esc(p.en)}">🔊</button></li>`).join('')}</ul>
 <button class="ghost sm" data-say="${esc(S.phrases.map(p=>p.en).join('. '))}">🔊 全部句型</button>`;
 $('showModel').onclick = () => { $('model').classList.toggle('hidden'); };
 
 /* 2 vocab */
-$('s-vocab').innerHTML = `<h2>📚 2. 單字 Vocabulary <span class="badge">${L.vocab.length} 個</span></h2><p class="zh">點卡片翻面看中文與例句。</p>
+$('s-vocab').innerHTML = `<h2><span class="t">II · 單字 Vocabulary</span> <span class="badge">${L.vocab.length} 個</span></h2><p class="zh">點卡片翻面看中文與例句。</p>
 <div class="grid">${L.vocab.map(v=>`<div class="flip"><div class="inner">
 <div class="face"><div class="word">${esc(v.word)}</div><div class="pos">${esc(v.pos)}</div><button class="sm ghost" style="margin-top:10px" data-say="${esc(v.word)}">🔊</button></div>
 <div class="face back"><div><b>${esc(v.word)}</b> <span class="zh">${esc(v.zh)}</span></div><div style="font-style:italic">${esc(v.example)}</div><button class="sm ghost" data-say="${esc(v.example)}">🔊 例句</button></div>
@@ -213,42 +253,44 @@ document.querySelectorAll('.flip').forEach(c => c.onclick = () => c.classList.to
 
 /* 3 grammar */
 const G = L.grammar;
-$('s-gram').innerHTML = `<h2>✏️ 3. 文法 Grammar</h2><h3 style="font-size:1rem;margin:0">${esc(G.title)}</h3><p>${esc(G.explanationZh)}</p>
+$('s-gram').innerHTML = `<h2><span class="t">III · 文法 Grammar</span></h2><h3>${esc(G.title)}</h3><p>${esc(G.explanationZh)}</p>
 ${G.examples.map(x=>`<div class="ex"><b>${esc(x.en)}</b> <button class="sm ghost" data-say="${esc(x.en)}">🔊</button><div class="zh">${esc(x.noteZh)}</div></div>`).join('')}`;
 
 /* 4 use of english */
 const U = L.useOfEnglish;
 const txt = esc(U.text).replace(/\{(\d+)\}/g, (m,n)=>`<span class="gap" id="gap${n}">(${n})</span>`);
-$('s-uoe').innerHTML = `<h2>📖 4. Use of English <span class="badge">${esc(U.type)}</span></h2><p class="zh">${esc(U.instructionZh)}</p><p>${txt}</p>
+$('s-uoe').innerHTML = `<h2><span class="t">IV · Use of English</span> <span class="badge">${esc(U.type)}</span></h2><p class="zh">${esc(U.instructionZh)}</p><p class="uoetext">${txt}</p><div class="qscore" id="uprog" style="margin:6px 0 18px"></div>
 ${U.gaps.map(g=>`<div class="gq" id="ug${g.n}"><b>(${g.n})</b>${g.options?`<div class="opts">${g.options.map((o,i)=>`<button class="opt" data-n="${g.n}" data-v="${esc(o)}">${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`:
-`<div style="display:flex;gap:8px;margin:6px 0"><input data-n="${g.n}" autocapitalize="off" autocorrect="off" style="flex:1;font:inherit;padding:8px;border:1.5px solid #d1d5db;border-radius:8px"><button class="sm" data-chk="${g.n}">檢查</button></div>`}<div class="fbx"></div></div>`).join('')}`;
+`<div style="display:flex;gap:8px;margin:6px 0"><input data-n="${g.n}" autocapitalize="off" autocorrect="off" style="flex:1"><button class="sm" data-chk="${g.n}">檢查</button></div>`}<div class="fbx"></div></div>`).join('')}`;
+function uoeScore(){ return U.gaps.filter(g=>g.n in state.uoe && String(state.uoe[g.n]).trim().toLowerCase()===g.answer.toLowerCase()).length; }
+function uprog(){ const n=U.gaps.filter(g=>g.n in state.uoe).length; $('uprog').textContent = `Use of English 得分 ${uoeScore()} / ${U.gaps.length}` + (n<U.gaps.length?`（已作答 ${n}）`:''); }
 function answerGap(n, v){
   const g = U.gaps.find(x=>x.n==n); if(!g) return;
   const ok = v.trim().toLowerCase() === g.answer.toLowerCase();
-  state.uoe[n] = v; save();
+  state.uoe[n] = v; save(); setTimeout(uprog);
   const box = $('ug'+n), gap = $('gap'+n);
   box.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; if(b.dataset.v===g.answer) b.classList.add('ok'); else if(b.dataset.v===v) b.classList.add('bad'); });
   const inp = box.querySelector('input'); if(inp){ inp.value=v; inp.disabled=true; }
   if(gap){ gap.textContent = g.answer; gap.classList.add(ok?'ok':'bad'); }
-  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'✅ 正確！':'❌ 正確答案：'+esc(g.answer)+'。'} ${esc(g.explanationZh||'')}</div>`;
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'<b>✓ 正確</b>':'<b>✗ 正確答案：'+esc(g.answer)+'</b>'} ${esc(g.explanationZh||'')}</div>`;
 }
 $('s-uoe').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerGap(b.dataset.n,b.dataset.v);
   const c=e.target.closest('[data-chk]'); if(c){ const i=$('ug'+c.dataset.chk).querySelector('input'); if(i.value.trim()) answerGap(c.dataset.chk,i.value); } });
-Object.keys(state.uoe).forEach(n=>answerGap(n,state.uoe[n]));
+Object.keys(state.uoe).forEach(n=>answerGap(n,state.uoe[n])); uprog();
 
 /* 5 quiz */
 const Q = L.quiz;
-$('s-quiz').innerHTML = `<h2>🎯 5. 小測驗 Quiz</h2><div class="sub" id="qprog"></div><div class="bar"><div id="qbar"></div></div>
+$('s-quiz').innerHTML = `<h2><span class="t">V · 小測驗 Quiz</span></h2><div class="qhead"><span id="qprog"></span><span class="qscore" id="qscore"></span></div><div class="bar"><div id="qbar"></div></div>
 ${Q.map((q,i)=>`<div class="gq" id="qq${i}"><b>${i+1}. ${esc(q.q)}</b><div class="opts">${q.options.map((o,j)=>`<button class="opt" data-q="${i}" data-j="${j}">${'ABCD'[j]}. ${esc(o)}</button>`).join('')}</div><div class="fbx"></div></div>`).join('')}
-<button id="finish" style="width:100%">完成並查看結果</button>`;
+<button id="finish" class="solid" style="width:100%">完成並查看結果</button>`;
 function answerQ(i, j){
   const q = Q[i], box = $('qq'+i), ok = j===q.answer;
   state.quiz[q.id] = j; save();
   box.querySelectorAll('.opt').forEach((b,k)=>{ b.disabled=true; if(k===q.answer) b.classList.add('ok'); else if(k===j) b.classList.add('bad'); });
-  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'✅ 正確！':'❌ 答錯了，正確答案：'+esc(q.options[q.answer])+'。'} ${esc(q.explanationZh)}</div>`;
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'<b>✓ 正確</b>':'<b>✗ 正確答案：'+esc(q.options[q.answer])+'</b>'} ${esc(q.explanationZh)}</div>`;
   prog();
 }
-function prog(){ const n = Q.filter(q=>q.id in state.quiz).length; $('qprog').textContent = `進度 ${n}/${Q.length}`; $('qbar').style.width = (n/Q.length*100)+'%'; if(n===Q.length) showEnd(); }
+function prog(){ const n = Q.filter(q=>q.id in state.quiz).length; $('qprog').textContent = `進度 ${n}/${Q.length}`; $('qbar').style.width = (n/Q.length*100)+'%'; const c = Q.filter(q=>state.quiz[q.id]===q.answer).length; $('qscore').textContent = `得分 ${c} / ${Q.length}`; $('liveScore').textContent = c; $('live').lastChild.textContent = ' / ' + Q.length; if(n===Q.length) showEnd(); }
 $('s-quiz').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerQ(+b.dataset.q, +b.dataset.j); });
 Q.forEach((q,i)=>{ if(q.id in state.quiz) answerQ(i, state.quiz[q.id]); }); prog();
 $('finish').onclick = () => { showEnd(); $('s-end').scrollIntoView({behavior:'smooth'}); };
@@ -256,15 +298,19 @@ $('finish').onclick = () => { showEnd(); $('s-end').scrollIntoView({behavior:'sm
 /* end */
 function showEnd(){
   const missed = Q.filter(q=>state.quiz[q.id]!==q.answer);
-  const score = Q.length - missed.length;
-  state.score = score; state.completedAt = state.completedAt || new Date().toISOString(); save();
-  const code = `FCE-${L.date} ${score}/${Q.length} missed:${missed.length?missed.map(q=>q.id).join(','):'none'}`;
+  const score = Q.length - missed.length, pts = Math.round(score/Q.length*100), uo = uoeScore(), un = U.gaps.length;
+  state.score = score; state.points = pts; state.uoeScore = uo; state.completedAt = state.completedAt || new Date().toISOString(); save();
+  const code = `FCE-${L.date} quiz:${score}/${Q.length} uoe:${uo}/${un} score:${pts} missed:${missed.length?missed.map(q=>q.id).join(','):'none'}`;
+  const uMiss = U.gaps.filter(g=>!(g.n in state.uoe) || String(state.uoe[g.n]).trim().toLowerCase()!==g.answer.toLowerCase());
   const e = $('s-end'); e.classList.remove('hidden');
-  e.innerHTML = `<h2>🏁 完成！</h2><div class="score">${score}/${Q.length}</div>
-${missed.length?`<p><b>需要複習的題目：</b></p><ul>${missed.map(q=>`<li><b>${esc(q.id)}</b> ${esc(q.q)}<br><span class="zh">${q.id in state.quiz?'你的答案：'+esc(q.options[state.quiz[q.id]])+'；':'未作答；'}正解：${esc(q.options[q.answer])}</span></li>`).join('')}</ul>`:'<p>全對，太棒了！🎉</p>'}
+  e.innerHTML = `<div class="endart" role="img" aria-label="monkey"></div><div class="scorelbl">Today's score</div>
+<div class="score">${pts}<small> / 100</small></div>
+<div class="subscores"><div>${score} / ${Q.length}<span>小測驗 Quiz</span></div><div>${uo} / ${un}<span>Use of English</span></div></div>
+${missed.length?`<h3>需要複習的題目</h3><ul>${missed.map(q=>`<li><b>${esc(q.id)}</b> ${esc(q.q)}<br><span class="zh">${q.id in state.quiz?'你的答案：'+esc(q.options[state.quiz[q.id]])+'；':'未作答；'}正解：${esc(q.options[q.answer])}</span></li>`).join('')}</ul>`:'<p style="text-align:center">小測驗全對，太棒了！</p>'}
+${uMiss.length?`<h3>Use of English 待複習</h3><ul>${uMiss.map(g=>`<li><b>(${g.n})</b> <span class="zh">${g.n in state.uoe?'你的答案：'+esc(state.uoe[g.n])+'；':'未作答；'}正解：${esc(g.answer)}</span></li>`).join('')}</ul>`:''}
 <p class="zh">請複製以下完成碼，貼回家教聊天室：</p><div class="code" id="code">${esc(code)}</div>
-<button id="copy">📋 複製完成碼</button> <button class="ghost" id="redo">重做今日課程</button>`;
-  $('copy').onclick = () => { const done=()=>{$('copy').textContent='✅ 已複製';};
+<div class="btns"><button class="solid" id="copy">複製完成碼</button><button class="ghost" id="redo">重做今日課程</button></div>`;
+  $('copy').onclick = () => { const done=()=>{$('copy').textContent='✓ 已複製';};
     if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(code).then(done,fallback); else fallback();
     function fallback(){ const t=document.createElement('textarea'); t.value=code; document.body.appendChild(t); t.select(); try{document.execCommand('copy'); done();}catch(x){ alert(code); } t.remove(); } };
   $('redo').onclick = () => { if(confirm('確定要清除今日進度重新開始？')){ localStorage.removeItem(KEY); location.reload(); } };
