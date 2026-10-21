@@ -23,7 +23,10 @@
   vocab: [{ word, pos, zh, example }],   // 8 items, flip cards
   grammar: {
     title: "string", explanationZh: "string",
-    examples: [{ en, noteZh }]           // 3-4
+    examples: [{ en, noteZh }],          // 3-4
+    practice: [{ q, options:[..], answer: index, explanationZh }]
+         // OPTIONAL, 2 items: UNSCORED quick checks in 學習 step 3 (instant feedback).
+         // If omitted/empty, step 3 just requires a '我看懂了' tap.
   },
   useOfEnglish: {
     type: "Part 1" | "Part 2", instructionZh: "string",
@@ -33,6 +36,9 @@
   },
   quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 10
  }
+ FLOW: guided learning, one step at a time: 1 口說 → 2 單字 (flip all cards) → 3 文法 (+practice)
+ → 4 Use of English (scored, all gaps answered) → 測驗 unlocks (locked 🔒 before that).
+ Learning progress saved in localStorage (same per-date key); 重做 clears everything.
  SCORING: quiz = 10 pts per question (score 0-100, shown live as 得分 X / 10);
  Use of English scored separately (X / number of gaps).
  Completion code: FCE-<date> quiz:<X>/10 uoe:<Y>/6 score:<0-100> missed:q3,q7  (or missed:none)
@@ -74,6 +80,10 @@ const LESSON = {
       { en: "I've worked here since 2023.", noteZh: "從過去持續到現在（since）→ 現在完成式" },
       { en: "Have you ever worked night shifts?", noteZh: "詢問人生經驗（ever）→ 現在完成式" },
       { en: "I've just finished the report, so I can help you now.", noteZh: "剛完成且影響現在 → 現在完成式；✗ I've finished it yesterday." }
+    ],
+    practice: [
+      { q: "I ___ my homework an hour ago, so now I can play games.", options: ["have finished", "finished", "have been finishing", "finish"], answer: 1, explanationZh: "an hour ago 是明確的過去時間 → 用過去簡單式 finished；現在完成式不能和 ago 連用。" },
+      { q: "My English teacher ___ at our school since 2020.", options: ["taught", "teaches", "has taught", "was teaching"], answer: 2, explanationZh: "since 2020 表示從過去持續到現在 → 現在完成式 has taught。" }
     ]
   },
   useOfEnglish: {
@@ -183,6 +193,18 @@ ul.phr li{display:flex;justify-content:space-between;gap:10px;align-items:center
 .btns{display:flex;flex-wrap:wrap;gap:10px}
 .hidden{display:none}
 input{font:inherit;padding:8px 4px;border:none;border-bottom:1.2px solid var(--brown);background:transparent;color:var(--ink);border-radius:0;outline:none}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:760px;margin:8px auto 0;font-size:.8rem}
+.steps button{padding:2px 10px;font-size:.8rem;border-color:rgba(107,74,53,.35);color:var(--mute)}
+.steps button.done{border-color:var(--sage);color:var(--sage)}
+.steps button.cur{background:var(--brown);color:var(--paper);border-color:var(--brown)}
+.steps button.locked{opacity:.5;border-style:dashed}
+.steps .arr{color:var(--mute)}
+.steplbl{text-align:center;font-family:var(--serif);color:var(--brown);letter-spacing:.12em;font-size:.85rem;margin-top:4px}
+.next{margin-top:26px;width:100%}
+button.solid:disabled{opacity:.4}
+.lock{text-align:center;padding:40px 10px;font-size:1.05rem;color:var(--brown);border:1.2px dashed rgba(107,74,53,.45);border-radius:var(--wob)}
+.req{font-size:.85rem;color:var(--sage);margin-top:10px}
+section.step-hide{display:none}
 @media(max-width:480px){.opts{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr;gap:12px}.flip{height:220px}.art{height:150px}h1{letter-spacing:.22em;font-size:1.1rem}.score{font-size:3.8rem}}
 @media(min-width:768px){main{padding-left:40px;padding-right:40px}.art{height:200px;background-size:auto 440px}}
 </style>
@@ -192,12 +214,14 @@ input{font:inherit;padding:8px 4px;border:none;border-bottom:1.2px solid var(--b
 <header><div class="hrow">
   <div class="live" id="live">得分 <b id="liveScore">0</b> / 10</div>
   <div class="timer"><span class="time" id="time"></span><button class="sm solid" id="tbtn">開始</button><button class="sm ghost" id="treset">重設</button></div>
-</div></header>
+</div>
+<nav class="steps" id="steps"></nav><div class="steplbl" id="steplbl"></div></header>
 <main>
   <section id="s-speak"></section>
   <section id="s-vocab"></section>
   <section id="s-gram"></section>
   <section id="s-uoe"></section>
+  <section id="s-lock"></section>
   <section id="s-quiz"></section>
   <section id="s-end" class="hidden"></section>
 </main>
@@ -208,6 +232,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const KEY = 'fce-lesson-' + L.date;
 let state = {}; try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) {}
 state.quiz = state.quiz || {}; state.uoe = state.uoe || {};
+state.learn = state.learn || {}; const LN = state.learn;
+LN.flipped = LN.flipped || []; LN.practice = LN.practice || {};
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} };
 
 /* speech */
@@ -236,25 +262,48 @@ $('s-speak').innerHTML = `<h2><span class="t">I · 口說 Speaking</span> <span 
 ${(S.followUps||[]).length?`<p class="zh">延伸問題：</p><ul>${S.followUps.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:''}
 <p class="zh">💡 ${esc(S.tipZh||'')}</p>
 <p class="zh">先自己大聲回答一次（約 30 秒），再看範例。</p>
-<button class="ghost" id="showModel">顯示範例回答</button>
-<div class="model hidden" id="model"><p>${esc(S.modelAnswer)}</p><button class="sm" data-say="${esc(S.modelAnswer)}">🔊 聆聽範例</button></div>
+<h3>範例回答</h3>
+<div class="model" id="model"><p>${esc(S.modelAnswer)}</p><div class="btns"><button class="sm" id="listenModel" data-say="${esc(S.modelAnswer)}">🔊 聆聽範例</button><button class="sm ghost" id="readAloud">🗣 我唸過了</button></div></div>
 <h3>實用句型</h3>
 <ul class="phr">${S.phrases.map(p=>`<li><div><b>${esc(p.en)}</b><div class="zh">${esc(p.zh)}</div></div><button class="sm ghost" data-say="${esc(p.en)}">🔊</button></li>`).join('')}</ul>
 <button class="ghost sm" data-say="${esc(S.phrases.map(p=>p.en).join('. '))}">🔊 全部句型</button>`;
-$('showModel').onclick = () => { $('model').classList.toggle('hidden'); };
+$('s-speak').insertAdjacentHTML('beforeend', `<div class="req" id="speakReq"></div><button class="solid next" id="next1">學會了，下一步</button>`);
+function drawSpeak(){ const ok = !!(LN.listened||LN.readAloud); $('next1').disabled = !ok;
+  $('speakReq').textContent = ok ? '✓ 已完成：' + (LN.listened?'聽過範例 ':'') + (LN.readAloud?'唸過範例':'') : '請先聆聽範例一次，或大聲唸完範例後點「我唸過了」。'; }
+$('listenModel').addEventListener('click', ()=>{ LN.listened = true; save(); drawSpeak(); });
+$('readAloud').onclick = () => { LN.readAloud = true; save(); drawSpeak(); };
+$('next1').onclick = () => { LN.s1 = true; save(); go(2); };
+drawSpeak();
 
 /* 2 vocab */
-$('s-vocab').innerHTML = `<h2><span class="t">II · 單字 Vocabulary</span> <span class="badge">${L.vocab.length} 個</span></h2><p class="zh">點卡片翻面看中文與例句。</p>
-<div class="grid">${L.vocab.map(v=>`<div class="flip"><div class="inner">
+$('s-vocab').innerHTML = `<h2><span class="t">II · 單字 Vocabulary</span> <span class="badge">${L.vocab.length} 個</span></h2><p class="zh">點卡片翻面看中文與例句（每張都要翻過，也可以按 🔊 聆聽）。</p><div class="qscore" id="vprog" style="margin:0 0 14px"></div>
+<div class="grid">${L.vocab.map((v,i)=>`<div class="flip" data-i="${i}"><div class="inner">
 <div class="face"><div class="word">${esc(v.word)}</div><div class="pos">${esc(v.pos)}</div><button class="sm ghost" style="margin-top:10px" data-say="${esc(v.word)}">🔊</button></div>
 <div class="face back"><div><b>${esc(v.word)}</b> <span class="zh">${esc(v.zh)}</span></div><div style="font-style:italic">${esc(v.example)}</div><button class="sm ghost" data-say="${esc(v.example)}">🔊 例句</button></div>
 </div></div>`).join('')}</div>`;
-document.querySelectorAll('.flip').forEach(c => c.onclick = () => c.classList.toggle('on'));
+$('s-vocab').insertAdjacentHTML('beforeend', `<button class="solid next" id="next2">學會了，下一步</button>`);
+function drawVocab(){ const n = LN.flipped.length; $('vprog').textContent = `已學 ${n}/${L.vocab.length}`; $('next2').disabled = n < L.vocab.length;
+  document.querySelectorAll('.flip').forEach(c => c.querySelector('.face').style.borderColor = LN.flipped.includes(+c.dataset.i) ? 'var(--sage)' : ''); }
+document.querySelectorAll('.flip').forEach(c => c.onclick = () => { c.classList.toggle('on'); const i = +c.dataset.i; if(!LN.flipped.includes(i)){ LN.flipped.push(i); save(); } drawVocab(); });
+$('next2').onclick = () => { LN.s2 = true; save(); go(3); };
+drawVocab();
 
 /* 3 grammar */
-const G = L.grammar;
+const G = L.grammar, GP = (G.practice||[]).filter(q=>q&&q.options&&q.options.length);
 $('s-gram').innerHTML = `<h2><span class="t">III · 文法 Grammar</span></h2><h3>${esc(G.title)}</h3><p>${esc(G.explanationZh)}</p>
-${G.examples.map(x=>`<div class="ex"><b>${esc(x.en)}</b> <button class="sm ghost" data-say="${esc(x.en)}">🔊</button><div class="zh">${esc(x.noteZh)}</div></div>`).join('')}`;
+${G.examples.map(x=>`<div class="ex"><b>${esc(x.en)}</b> <button class="sm ghost" data-say="${esc(x.en)}">🔊</button><div class="zh">${esc(x.noteZh)}</div></div>`).join('')}
+${GP.length?`<h3>小練習（不計分）</h3>${GP.map((q,i)=>`<div class="gq" id="gp${i}"><b>${i+1}. ${esc(q.q)}</b><div class="opts">${q.options.map((o,j)=>`<button class="opt" data-p="${i}" data-j="${j}">${'ABCD'[j]}. ${esc(o)}</button>`).join('')}</div><div class="fbx"></div></div>`).join('')}`:''}
+<div class="req" id="gramReq"></div>${GP.length?'':'<button class="ghost" id="gotIt" style="margin-top:14px">👌 我看懂了</button>'}
+<button class="solid next" id="next3">學會了，下一步</button>`;
+function answerP(i,j){ const q=GP[i], box=$('gp'+i), ok=j===q.answer; LN.practice[i]=j; save();
+  box.querySelectorAll('.opt').forEach((b,k)=>{ b.disabled=true; if(k===q.answer) b.classList.add('ok'); else if(k===j) b.classList.add('bad'); });
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'<b>✓ 正確</b>':'<b>✗ 正確答案：'+esc(q.options[q.answer])+'</b>'} ${esc(q.explanationZh||'')}</div>`; drawGram(); }
+function gramOk(){ return GP.length ? GP.every((q,i)=>i in LN.practice) : !!LN.gotIt; }
+function drawGram(){ const ok=gramOk(); $('next3').disabled=!ok; $('gramReq').textContent = ok?'✓ 完成':(GP.length?`完成 ${Object.keys(LN.practice).length}/${GP.length} 題小練習後即可繼續。`:'看完說明與例句後，點「我看懂了」。'); }
+$('s-gram').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerP(+b.dataset.p,+b.dataset.j); });
+if($('gotIt')) $('gotIt').onclick = () => { LN.gotIt = true; save(); drawGram(); };
+$('next3').onclick = () => { LN.s3 = true; save(); go(4); };
+Object.keys(LN.practice).forEach(i=>{ if(GP[i]) answerP(+i, LN.practice[i]); }); drawGram();
 
 /* 4 use of english */
 const U = L.useOfEnglish;
@@ -263,7 +312,8 @@ $('s-uoe').innerHTML = `<h2><span class="t">IV · Use of English</span> <span cl
 ${U.gaps.map(g=>`<div class="gq" id="ug${g.n}"><b>(${g.n})</b>${g.options?`<div class="opts">${g.options.map((o,i)=>`<button class="opt" data-n="${g.n}" data-v="${esc(o)}">${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`:
 `<div style="display:flex;gap:8px;margin:6px 0"><input data-n="${g.n}" autocapitalize="off" autocorrect="off" style="flex:1"><button class="sm" data-chk="${g.n}">檢查</button></div>`}<div class="fbx"></div></div>`).join('')}`;
 function uoeScore(){ return U.gaps.filter(g=>g.n in state.uoe && String(state.uoe[g.n]).trim().toLowerCase()===g.answer.toLowerCase()).length; }
-function uprog(){ const n=U.gaps.filter(g=>g.n in state.uoe).length; $('uprog').textContent = `Use of English 得分 ${uoeScore()} / ${U.gaps.length}` + (n<U.gaps.length?`（已作答 ${n}）`:''); }
+function uprog(){ const n=U.gaps.filter(g=>g.n in state.uoe).length; $('uprog').textContent = `Use of English 得分 ${uoeScore()} / ${U.gaps.length}` + (n<U.gaps.length?`（已作答 ${n}）`:'');
+  const nb=$('next4'); if(nb){ nb.disabled = n<U.gaps.length; $('uoeReq').textContent = n<U.gaps.length ? `完成全部 ${U.gaps.length} 格後即可解鎖測驗（已作答 ${n}）。` : '✓ 完成，可以開始測驗了！'; } }
 function answerGap(n, v){
   const g = U.gaps.find(x=>x.n==n); if(!g) return;
   const ok = v.trim().toLowerCase() === g.answer.toLowerCase();
@@ -276,6 +326,8 @@ function answerGap(n, v){
 }
 $('s-uoe').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerGap(b.dataset.n,b.dataset.v);
   const c=e.target.closest('[data-chk]'); if(c){ const i=$('ug'+c.dataset.chk).querySelector('input'); if(i.value.trim()) answerGap(c.dataset.chk,i.value); } });
+$('s-uoe').insertAdjacentHTML('beforeend', `<div class="req" id="uoeReq"></div><button class="solid next" id="next4">完成學習，開始測驗 →</button>`);
+$('next4').onclick = () => { LN.s4 = true; save(); go(5); };
 Object.keys(state.uoe).forEach(n=>answerGap(n,state.uoe[n])); uprog();
 
 /* 5 quiz */
@@ -291,9 +343,34 @@ function answerQ(i, j){
   prog();
 }
 function prog(){ const n = Q.filter(q=>q.id in state.quiz).length; $('qprog').textContent = `進度 ${n}/${Q.length}`; $('qbar').style.width = (n/Q.length*100)+'%'; const c = Q.filter(q=>state.quiz[q.id]===q.answer).length; $('qscore').textContent = `得分 ${c} / ${Q.length}`; $('liveScore').textContent = c; $('live').lastChild.textContent = ' / ' + Q.length; if(n===Q.length) showEnd(); }
-$('s-quiz').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerQ(+b.dataset.q, +b.dataset.j); });
+$('s-quiz').addEventListener('click', e=>{ if(!quizUnlocked()) return; const b=e.target.closest('.opt'); if(b&&!b.disabled) answerQ(+b.dataset.q, +b.dataset.j); });
 Q.forEach((q,i)=>{ if(q.id in state.quiz) answerQ(i, state.quiz[q.id]); }); prog();
-$('finish').onclick = () => { showEnd(); $('s-end').scrollIntoView({behavior:'smooth'}); };
+$('finish').onclick = () => { if(!quizUnlocked()) return; showEnd(); $('s-end').scrollIntoView({behavior:'smooth'}); };
+
+/* guided steps */
+const STEPS = [null,{id:'s-speak',n:'口說'},{id:'s-vocab',n:'單字'},{id:'s-gram',n:'文法'},{id:'s-uoe',n:'閱讀'},{id:'s-quiz',n:'測驗'}];
+function unlocked(k){ return k===1 || (k<=5 && !!LN['s'+(k-1)] && unlocked(k-1)); }
+const quizUnlocked = () => unlocked(5);
+$('s-lock').innerHTML = `<div class="lock">🔒 先完成學習才能測驗<div class="zh" style="margin-top:8px">依序完成 學習 1–4（口說、單字、文法、閱讀）後，小測驗才會解鎖。</div></div>`;
+function go(k, noScroll){
+  if(!unlocked(k)) return;
+  LN.step = k; save();
+  for(let i=1;i<=5;i++){ $(STEPS[i].id).classList.toggle('step-hide', i!==k); }
+  $('s-lock').classList.toggle('step-hide', true);
+  $('s-end').classList.toggle('step-hide', k!==5);
+  drawSteps(); if(!noScroll) window.scrollTo(0, Math.max(0, $('steps').getBoundingClientRect().top + window.scrollY - 120));
+}
+function drawSteps(){
+  const cur = LN.step||1;
+  $('steps').innerHTML = STEPS.slice(1).map((s,i)=>{ const k=i+1, lock=!unlocked(k), done=k<5?!!LN['s'+k]:!!state.completedAt;
+    return `${k===5?'<span class="arr">→</span>':''}<button class="${k===cur?'cur':''} ${done?'done':''} ${lock?'locked':''}" data-step="${k}" ${lock?'aria-disabled="true"':''}>${lock?'🔒 ':done?'✓ ':''}${k<5?k+' ':''}${s.n}</button>`; }).join('');
+  $('steplbl').textContent = cur<5 ? `學習 ${cur}/4 → 測驗` : '測驗 Quiz';
+}
+$('steps').addEventListener('click', e=>{ const b=e.target.closest('[data-step]'); if(!b) return; const k=+b.dataset.step;
+  if(!unlocked(k)){ if(k===5){ for(let i=1;i<=5;i++) $(STEPS[i].id).classList.add('step-hide'); $('s-end').classList.add('step-hide'); $('s-lock').classList.remove('step-hide'); } return; }
+  go(k); });
+go(unlocked(LN.step||1) ? (LN.step||1) : 1, true);
+window.__fce = { unlocked, quizUnlocked, go, state };
 
 /* end */
 function showEnd(){
