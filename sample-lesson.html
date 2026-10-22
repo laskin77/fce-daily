@@ -12,7 +12,7 @@
   topic: "string",               // English topic title
   topicZh: "string",             // 中文主題
   minutes: 8,                    // timer length (target 7-8 min)
-  speaking: {
+  speaking: {                   // REQUIRED only when idol is absent; if LESSON.idol is present this step is SKIPPED (may be omitted)
     part: "Part 1" | "Part 2",
     prompt: "string",            // examiner question / task
     followUps: ["string"],       // optional, keep 0-1 (1 prompt only)
@@ -34,11 +34,12 @@
     gaps: [{ n, options: [..] (Part 1) , answer: "string", explanationZh }]   // 4 gaps; score shown uoe:X/gaps.length
          // Part 2 (open cloze): omit options; learner types
   },
-  idol: {                        // OPTIONAL step "跟偶像學英文" shown right after 口說 (~1 min). Omit → step skipped.
+  idol: {                        // OPTIONAL step "原聲跟讀" (跟偶像學英文). Present → it REPLACES 口說 (both are listen-then-repeat)
+                                 // and becomes step 1 (~2-3 min). Omit → step skipped, 口說 is step 1 as before.
     person: "Tsai Ing-wen" | "Hsiao Bi-khim" | "Puma Shen",
     personZh: "蔡英文",            // optional display name
     introZh: "string",           // 1-3 句真實背景 + 這段話的場合（日期、地點）
-    excerpt: "string",           // REAL verbatim English, ONE sentence (~8-12 s of speech); "…" marks cuts. NEVER invented.
+    excerpt: "string",           // REAL verbatim English, 2-3 real sentences (~20-30 s of speech); "…" marks cuts. NEVER invented.
     sourceUrl: "https://...",    // official transcript (curl-verified 200)
     sourceLabel: "string",       // optional, e.g. "總統府英文網站逐字稿"
     videoUrl: "https://...",     // OPTIONAL YouTube link
@@ -49,14 +50,16 @@
                                  // playing only start→end, + 🔁 replay; 'next' unlocks once it was played/tapped.
                                  // Absent → TTS fallback, clearly labeled 電腦發音. NEVER synthesize/clone a real voice.
                                  // Timestamps must be verified (captions via yt-dlp or transcribed audio).
-    chunks: [{ text, say, start, end }],  // 1-2 shadowing chunks. text may mark stress with *word* and pauses / or //;
+    chunks: [{ text, say, start, end }],  // 3-4 shadowing chunks, each with real-voice start/end. text may mark stress with *word* and pauses / or //;
                                  // start/end (seconds, OPTIONAL, same clip video) → chunk ▶ replays that bit in the real voice;
                                  // say = plain text for TTS fallback only (optional; defaults to text with marks stripped)
-    phrases: [{ en, zh, example }]   // exactly 1 (min 1)
+    phrases: [{ en, zh, example }],  // exactly 2
+    respond: { promptEn, promptZh, starters: ["string"] }  // OPTIONAL short speaking response: FCE-style question tied
+                                 // to the clip; Roby answers aloud in 1-2 sentences (2-3 starters). Not required to unlock.
   },
   quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 6 (may include 1 on the idol excerpt)
  }
- FLOW: guided learning, one step at a time: 1 口說 → [跟偶像學英文, only if LESSON.idol; done after ≥1 ▶ play (real clip if idol.clip)] → 單字 (flip all cards) → 3 文法 (+practice)
+ FLOW: guided learning, one step at a time: 1 = 原聲跟讀 if LESSON.idol (done after ≥1 ▶ play) ELSE 口說 → 單字 (flip all cards) → 3 文法 (+practice)
  → 4 Use of English (scored, all gaps answered) → 測驗 unlocks (locked 🔒 before that).
  Learning progress saved in localStorage (same per-date key); 重做 clears everything.
  SCORING: all counts come from array lengths. Live header shows quiz 得分 X / quiz.length;
@@ -70,31 +73,28 @@ const LESSON = {
   topic: "Travel & holidays",
   topicZh: "旅行與假期",
   minutes: 8,
-  speaking: {
-    part: "Part 1",
-    prompt: "Where would you like to go on your next holiday? Why?",
-    modelAnswer: "I'd really love to go to Japan, especially Hokkaido in winter. I've never seen real snow, so I'm looking forward to trying skiing for the first time. I'd prefer to stay somewhere quiet and close to nature rather than in a big city. I think travelling is a great way to broaden your mind.",
-    tipZh: "Part 1：先直接說出地點，再給 1–2 個理由。可以用「I've never…, so I'm looking forward to…」連結經驗和期待，聽起來很自然。",
-    phrases: [
-      { en: "I'd really love to go to…", zh: "我真的很想去……" },
-      { en: "I'm looking forward to + V-ing", zh: "我很期待……" },
-      { en: "I'd prefer to… rather than…", zh: "我寧願……而不是……" }
-    ]
-  },
   idol: {
     person: "Hsiao Bi-khim", personZh: "蕭美琴",
     introZh: "蕭美琴副總統在美國長大、英文非常流利。這是她出訪帛琉時，在帛琉總統惠恕仁（Whipps）6 月 7 日（當地時間）歡迎晚宴上的致詞。影片是她本人的聲音。",
-    excerpt: "And like the Palauan people, we are also island people. And as we look to the Pacific, we look at the Pacific with an open heart, an open mind …",
+    excerpt: "And like the Palauan people, we are also island people. And as we look to the Pacific, we look at the Pacific with an open heart, an open mind, and with a warmth and hospitality that continue to bring us together and demonstrate that we are both countries that are forces for good in the world.",
     sourceUrl: "https://english.president.gov.tw/NEWS/7155", sourceLabel: "總統府英文網站逐字稿",
-    videoUrl: "https://www.youtube.com/watch?v=hoFt7V1omaU&t=244s", videoNote: "Rti English 新聞，4:04 起為本人原音",
-    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 256 },
+    videoUrl: "https://www.youtube.com/watch?v=hoFt7V1omaU&t=243s", videoNote: "Rti English 新聞，4:04 起為本人原音（她口語說 continues / demonstrates，逐字稿為 continue / demonstrate）",
+    clip: { youtubeId: "hoFt7V1omaU", start: 243.8, end: 269 },
     chunks: [
-      { text: "And like the *Palauan* people, / we are also *island* people. //", start: 244, end: 249 },
-      { text: "we look at the *Pacific* / with an *open heart*, / an *open mind*", start: 249, end: 256 }
+      { text: "And like the *Palauan* people, / we are also *island* people. //", start: 243.8, end: 248.2 },
+      { text: "And as we look to the *Pacific*, / we look at the Pacific / with an *open heart*, / an *open mind*, //", start: 248.5, end: 256.1 },
+      { text: "and with a *warmth* and *hospitality* / that continue to bring us *together*", start: 256.1, end: 262.1 },
+      { text: "and demonstrate that we are *both* countries / that are *forces for good* / in the *world*. //", start: 262.1, end: 269 }
     ],
     phrases: [
-      { en: "with an open heart and an open mind", zh: "敞開心胸、保持開放的態度", example: "I try to visit new places with an open heart and an open mind." }
-    ]
+      { en: "with an open heart and an open mind", zh: "敞開心胸、保持開放的態度", example: "I try to visit new places with an open heart and an open mind." },
+      { en: "a force for good", zh: "一股正面的力量；帶來好影響的人或事物", example: "Travel can be a force for good because it helps people understand each other." }
+    ],
+    respond: {
+      promptEn: "Hsiao Bi-khim says Taiwan and Palau are both island places. What do you like most about living on an island like Taiwan?",
+      promptZh: "蕭副總統說台灣和帛琉都是島嶼。住在台灣這樣的島上，你最喜歡什麼？",
+      starters: ["What I like most about living in Taiwan is…", "Because it's an island, we can…", "I think visitors would love… because…"]
+    }
   },
   vocab: [
     { word: "destination", pos: "n.", zh: "目的地", example: "Kyoto is a popular destination for tourists." },
@@ -281,7 +281,8 @@ $('tbtn').onclick = () => { if(tid){ clearInterval(tid); tid=null; $('tbtn').tex
 $('treset').onclick = () => { clearInterval(tid); tid=null; left=(L.minutes||8)*60; state.timeLeft=left; save(); $('tbtn').textContent='開始'; drawT(); };
 drawT();
 
-/* 1 speaking */
+/* 1 speaking (skipped when idol present) */
+if (!L.idol) {
 const S = L.speaking;
 $('s-speak').innerHTML = `<h2><span class="t">I · 口說 Speaking</span> <span class="badge">${esc(S.part)}</span></h2>
 <div class="prompt">${esc(S.prompt)} <button class="sm ghost" data-say="${esc(S.prompt)}">🔊</button></div>
@@ -300,8 +301,9 @@ $('listenModel').addEventListener('click', ()=>{ LN.listened = true; save(); dra
 $('readAloud').onclick = () => { LN.readAloud = true; save(); drawSpeak(); };
 $('next1').onclick = () => { LN.s1 = true; save(); goId(L.idol?'s-idol':'s-vocab'); };
 drawSpeak();
+} else $('s-speak').remove();
 
-/* 1b idol (optional) */
+/* 1 idol (optional) */
 const I = L.idol;
 if (I) {
   const mark = t => esc(t).replace(/\*([^*]+)\*/g,'<b class="stress">$1</b>');
@@ -309,7 +311,7 @@ if (I) {
   const ch = (I.chunks||[]).map(c => typeof c==='string' ? {text:c} : c);
   const C = (I.clip && I.clip.youtubeId) ? I.clip : null;
   const ytSrc = (st,en,ap) => C ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(C.youtubeId)}?start=${Math.floor(st)}&end=${Math.ceil(en)}&playsinline=1&rel=0&modestbranding=1${ap?'&autoplay=1':''}` : '';
-  $('s-idol').innerHTML = `<h2><span class="t">跟偶像學英文 Learn from your idol</span> <span class="badge">${esc(I.personZh||'')} ${esc(I.person)}</span></h2>
+  $('s-idol').innerHTML = `<h2><span class="t">I · 原聲跟讀 Learn from your idol</span> <span class="badge">${esc(I.personZh||'')} ${esc(I.person)}</span></h2>
 <p class="zh">${esc(I.introZh||'')}</p>
 <div class="prompt">${esc(I.excerpt)}</div>
 <p class="zh" style="font-size:.8rem">✅ 真實原話，逐字稿來源：<a href="${esc(I.sourceUrl)}" target="_blank" rel="noopener" style="color:var(--brown)">${esc(I.sourceLabel||I.sourceUrl)}</a>${I.videoUrl?`<br>▶ <a href="${esc(I.videoUrl)}" target="_blank" rel="noopener" style="color:var(--brown)">看原影片</a>${I.videoNote?'（'+esc(I.videoNote)+'）':''}`:''}</p>
@@ -321,6 +323,9 @@ ${ch.map(c=>{ const real = C && c.start!=null && c.end!=null;
 <div class="btns" style="margin-top:10px">${C?`<button class="sm ghost idolplay idolclip" data-s="${+C.start}" data-e="${+C.end}">▶ 整段原音</button>`:`<button class="sm ghost idolplay" data-say="${esc(ch.map(c=>c.say||plain(c.text)).join(' '))}">▶ 整段（電腦發音）</button>`}</div>
 <h3>偷學好句型</h3>
 ${(I.phrases||[]).map(p=>`<div class="ex"><b>${esc(p.en)}</b> <button class="sm ghost" data-say="${esc(p.example)}">🔊</button><div class="zh">${esc(p.zh)}</div><div style="font-style:italic">✏️ ${esc(p.example)}</div></div>`).join('')}
+${I.respond?`<h3>🗣 換你說 Your turn</h3><div class="prompt">${esc(I.respond.promptEn)} <button class="sm ghost" data-say="${esc(I.respond.promptEn)}">🔊</button></div>
+<p class="zh">${esc(I.respond.promptZh||'')}（大聲用 1–2 句回答，可用下面的開頭）</p>
+<ul class="phr">${(I.respond.starters||[]).map(t=>`<li><div><b>${esc(t)}</b></div></li>`).join('')}</ul>`:''}
 <div class="req" id="idolReq"></div><button class="solid next" id="nextI">學會了，下一步</button>`;
   const drawIdol = () => { $('nextI').disabled = !LN.idolPlayed; $('idolReq').textContent = LN.idolPlayed ? '✓ 已跟讀' : '請至少按一次 ▶ 播放並跟著唸。'; };
   const markPlayed = () => { if(!LN.idolPlayed){ LN.idolPlayed = true; save(); drawIdol(); } };
@@ -422,7 +427,7 @@ Q.forEach((q,i)=>{ if(q.id in state.quiz) answerQ(i, state.quiz[q.id]); }); prog
 $('finish').onclick = () => { if(!quizUnlocked()) return; showEnd(); $('s-end').scrollIntoView({behavior:'smooth'}); };
 
 /* guided steps */
-const STEPS = [null,{id:'s-speak',n:'口說',k:'s1'}].concat(I?[{id:'s-idol',n:'偶像',k:'si'}]:[],[{id:'s-vocab',n:'單字',k:'s2'},{id:'s-gram',n:'文法',k:'s3'},{id:'s-uoe',n:'閱讀',k:'s4'},{id:'s-quiz',n:'測驗'}]);
+const STEPS = [null, I?{id:'s-idol',n:'原聲跟讀',k:'si'}:{id:'s-speak',n:'口說',k:'s1'}].concat([{id:'s-vocab',n:'單字',k:'s2'},{id:'s-gram',n:'文法',k:'s3'},{id:'s-uoe',n:'閱讀',k:'s4'},{id:'s-quiz',n:'測驗'}]);
 const QS = STEPS.length-1;  // quiz step number
 if(!I) $('s-idol').remove();
 function unlocked(k){ return k===1 || (k>1 && k<=QS && !!LN[STEPS[k-1].k] && unlocked(k-1)); }
