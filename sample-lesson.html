@@ -43,13 +43,20 @@
     sourceLabel: "string",       // optional, e.g. "總統府英文網站逐字稿"
     videoUrl: "https://...",     // OPTIONAL YouTube link
     videoNote: "string",         // OPTIONAL, e.g. "新聞剪輯，未確認包含此句"
-    chunks: [{ text, say }],     // 3-5 shadowing chunks. text may mark stress with *word* and pauses / or //;
-                                 // say = plain text for TTS (optional; defaults to text with marks stripped)
+    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 270 },  // OPTIONAL but preferred: the idol's REAL voice.
+                                 // Seconds (integers ok) on that YouTube video where the excerpt is spoken.
+                                 // Present → step embeds a youtube-nocookie player (playsinline, iPad-safe)
+                                 // playing only start→end, + 🔁 replay; 'next' unlocks once it was played/tapped.
+                                 // Absent → TTS fallback, clearly labeled 電腦發音. NEVER synthesize/clone a real voice.
+                                 // Timestamps must be verified (captions via yt-dlp or transcribed audio).
+    chunks: [{ text, say, start, end }],  // 3-5 shadowing chunks. text may mark stress with *word* and pauses / or //;
+                                 // start/end (seconds, OPTIONAL, same clip video) → chunk ▶ replays that bit in the real voice;
+                                 // say = plain text for TTS fallback only (optional; defaults to text with marks stripped)
     phrases: [{ en, zh, example }]   // exactly 2
   },
   quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 10 (may include 1 on the idol excerpt)
  }
- FLOW: guided learning, one step at a time: 1 口說 → [跟偶像學英文, only if LESSON.idol; done after ≥1 ▶ play] → 單字 (flip all cards) → 3 文法 (+practice)
+ FLOW: guided learning, one step at a time: 1 口說 → [跟偶像學英文, only if LESSON.idol; done after ≥1 ▶ play (real clip if idol.clip)] → 單字 (flip all cards) → 3 文法 (+practice)
  → 4 Use of English (scored, all gaps answered) → 測驗 unlocks (locked 🔒 before that).
  Learning progress saved in localStorage (same per-date key); 重做 clears everything.
  SCORING: quiz = 10 pts per question (score 0-100, shown live as 得分 X / 10);
@@ -77,17 +84,20 @@ const LESSON = {
   },
   idol: {
     person: "Hsiao Bi-khim", personZh: "蕭美琴",
-    introZh: "蕭美琴副總統在美國長大、英文非常流利。這是她出訪帛琉時，在帛琉總統惠恕仁（Whipps）6 月 7 日（當地時間）歡迎晚宴上的致詞。",
-    excerpt: "But I think it is important to share with all of you that the oceans between us, the Pacific Ocean, does not separate us. Instead, it connects us.",
+    introZh: "蕭美琴副總統在美國長大、英文非常流利。這是她出訪帛琉時，在帛琉總統惠恕仁（Whipps）6 月 7 日（當地時間）歡迎晚宴上的致詞。影片是她本人的聲音。",
+    excerpt: "And like the Palauan people, we are also island people. And as we look to the Pacific, we look at the Pacific with an open heart, an open mind, and with a warmth and hospitality that continue to bring us together and demonstrate that we are both countries that are forces for good in the world.",
     sourceUrl: "https://english.president.gov.tw/NEWS/7155", sourceLabel: "總統府英文網站逐字稿",
+    videoUrl: "https://www.youtube.com/watch?v=hoFt7V1omaU&t=244s", videoNote: "Rti English 新聞，4:04 起為本人原音",
+    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 270 },
     chunks: [
-      { text: "the *oceans* between us, / the *Pacific* Ocean, //" },
-      { text: "does *not* / *separate* us. //" },
-      { text: "*Instead*, / it *connects* us." }
+      { text: "And like the *Palauan* people, / we are also *island* people. //", start: 244, end: 249 },
+      { text: "we look at the *Pacific* / with an *open heart*, / an *open mind*, //", start: 249, end: 258 },
+      { text: "that continue to *bring us together* //", start: 257, end: 263 },
+      { text: "we are both countries / that are *forces for good* / in the world.", start: 262, end: 270 }
     ],
     phrases: [
-      { en: "separate", zh: "分開", example: "The river separates the two towns." },
-      { en: "Instead, …", zh: "反而；取而代之", example: "We didn't fly. Instead, we took the train." }
+      { en: "with an open heart and an open mind", zh: "敞開心胸、保持開放的態度", example: "I try to visit new places with an open heart and an open mind." },
+      { en: "a force for good", zh: "一股向善的力量", example: "Volunteering can be a real force for good in a small town." }
     ]
   },
   vocab: [
@@ -134,7 +144,7 @@ const LESSON = {
     { id: "q4", q: "(會考) 公告：『Please keep your passport with you at all times.』這句話是要旅客做什麼？", options: ["隨身攜帶護照", "把護照交給導遊", "在機場申請護照", "把護照放在行李箱"], answer: 0, explanationZh: "keep … with you at all times = 隨時帶在身上。" },
     { id: "q5", q: "(FCE) Before we ___ off, Dad checked the itinerary again.", options: ["went", "set", "took", "made"], answer: 1, explanationZh: "set off = 出發。" },
     { id: "q6", q: "(會考) Tina enjoys ___ new food when she travels abroad.", options: ["try", "to try", "trying", "tried"], answer: 2, explanationZh: "enjoy + V-ing。" },
-    { id: "q7", q: "(FCE) Hsiao Bi-khim: the ocean \"does not separate us. Instead, it ___ us.\"", options: ["divides", "protects", "leaves", "connects"], answer: 3, explanationZh: "原文：Instead, it connects us. separate（分開）與 connect（連結）相反，Instead 表示「反而」。" },
+    { id: "q7", q: "(FCE) Hsiao Bi-khim: \"we look at the Pacific with an open heart, an open ___\"", options: ["door", "mind", "eye", "hand"], answer: 1, explanationZh: "原文：with an open heart, an open mind。open mind＝心胸開放、願意接受新想法；open heart＝真誠熱情。" },
     { id: "q8", q: "(會考) My brother has never traveled ___. He has only been to places in Taiwan.", options: ["abroad", "aboard", "away", "across"], answer: 0, explanationZh: "abroad = 到國外；aboard = 在（船/飛機）上。" },
     { id: "q9", q: "(FCE) Which word means 'a plan of a journey, with places and times'?", options: ["destination", "itinerary", "souvenir", "accommodation"], answer: 1, explanationZh: "itinerary = 行程表。" },
     { id: "q10", q: "(會考) We stopped ___ some photos because the sunset was so beautiful.", options: ["to take", "taking", "take", "took"], answer: 0, explanationZh: "stop to V = 停下來去做某事；stop V-ing = 停止做。這裡是停下來拍照。" }
@@ -226,6 +236,7 @@ input{font:inherit;padding:8px 4px;border:none;border-bottom:1.2px solid var(--b
 .steps button.done{border-color:var(--sage);color:var(--sage)}
 .steps button.cur{background:var(--brown);color:var(--paper);border-color:var(--brown)}
 .steps button.locked{opacity:.5;border-style:dashed}
+.yt{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000}.yt>div,.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .stress{color:var(--brown);text-decoration:underline wavy var(--sage);font-weight:400}
 .steps .arr{color:var(--mute)}
 .steplbl{text-align:center;font-family:var(--serif);color:var(--brown);letter-spacing:.12em;font-size:.85rem;margin-top:4px}
@@ -311,18 +322,44 @@ if (I) {
   const mark = t => esc(t).replace(/\*([^*]+)\*/g,'<b class="stress">$1</b>');
   const plain = t => String(t).replace(/\*/g,'').replace(/\s*\/+\s*/g,' ').replace(/\s+/g,' ').trim();
   const ch = (I.chunks||[]).map(c => typeof c==='string' ? {text:c} : c);
+  const C = (I.clip && I.clip.youtubeId) ? I.clip : null;
+  const ytSrc = (st,en,ap) => C ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(C.youtubeId)}?start=${Math.floor(st)}&end=${Math.ceil(en)}&playsinline=1&rel=0&modestbranding=1${ap?'&autoplay=1':''}` : '';
   $('s-idol').innerHTML = `<h2><span class="t">跟偶像學英文 Learn from your idol</span> <span class="badge">${esc(I.personZh||'')} ${esc(I.person)}</span></h2>
 <p class="zh">${esc(I.introZh||'')}</p>
 <div class="prompt">${esc(I.excerpt)}</div>
 <p class="zh" style="font-size:.8rem">✅ 真實原話，逐字稿來源：<a href="${esc(I.sourceUrl)}" target="_blank" rel="noopener" style="color:var(--brown)">${esc(I.sourceLabel||I.sourceUrl)}</a>${I.videoUrl?`<br>▶ <a href="${esc(I.videoUrl)}" target="_blank" rel="noopener" style="color:var(--brown)">看原影片</a>${I.videoNote?'（'+esc(I.videoNote)+'）':''}`:''}</p>
-<h3>跟讀 Shadowing</h3><p class="zh">按 ▶ 聽一段（英式電腦語音，備用；有影片請先聽原音），馬上跟著唸。<b class="stress">粗體</b>＝重音，/＝短停，//＝長停。</p>
-${ch.map(c=>`<div class="ex"><button class="sm idolplay" data-say="${esc(c.say||plain(c.text))}">▶</button> <b>${mark(c.text)}</b></div>`).join('')}
-<div class="btns" style="margin-top:10px"><button class="sm ghost idolplay" data-say="${esc(ch.map(c=>c.say||plain(c.text)).join(' '))}">▶ 整段</button></div>
+${C?`<h3>🎧 聽本人原音 Real voice</h3><div class="yt"><div id="ytP"><iframe src="${ytSrc(C.start,C.end,0)}" title="${esc(I.person)} video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen playsinline></iframe></div></div>
+<div class="btns" style="margin-top:8px"><button class="sm idolclip" data-s="${+C.start}" data-e="${+C.end}">🔁 重播原音</button></div>`:''}
+<h3>跟讀 Shadowing</h3><p class="zh">${C?'按 ▶ 聽本人原音的那一段，馬上跟著唸。':'按 ▶ 聽一段（<b>電腦發音</b>，非本人聲音），馬上跟著唸。'}<b class="stress">粗體</b>＝重音，/＝短停，//＝長停。</p>
+${ch.map(c=>{ const real = C && c.start!=null && c.end!=null;
+  return `<div class="ex">${real?`<button class="sm idolplay idolclip" data-s="${+c.start}" data-e="${+c.end}">▶ 原音</button>`:`<button class="sm ghost idolplay" data-say="${esc(c.say||plain(c.text))}">▶ 電腦發音</button>`} <b>${mark(c.text)}</b></div>`; }).join('')}
+<div class="btns" style="margin-top:10px">${C?`<button class="sm ghost idolplay idolclip" data-s="${+C.start}" data-e="${+C.end}">▶ 整段原音</button>`:`<button class="sm ghost idolplay" data-say="${esc(ch.map(c=>c.say||plain(c.text)).join(' '))}">▶ 整段（電腦發音）</button>`}</div>
 <h3>偷學好句型</h3>
 ${(I.phrases||[]).map(p=>`<div class="ex"><b>${esc(p.en)}</b> <button class="sm ghost" data-say="${esc(p.example)}">🔊</button><div class="zh">${esc(p.zh)}</div><div style="font-style:italic">✏️ ${esc(p.example)}</div></div>`).join('')}
 <div class="req" id="idolReq"></div><button class="solid next" id="nextI">學會了，下一步</button>`;
   const drawIdol = () => { $('nextI').disabled = !LN.idolPlayed; $('idolReq').textContent = LN.idolPlayed ? '✓ 已跟讀' : '請至少按一次 ▶ 播放並跟著唸。'; };
-  $('s-idol').addEventListener('click', e => { if(e.target.closest('.idolplay') && !LN.idolPlayed){ LN.idolPlayed = true; save(); drawIdol(); } }, true);
+  const markPlayed = () => { if(!LN.idolPlayed){ LN.idolPlayed = true; save(); drawIdol(); } };
+  $('s-idol').addEventListener('click', e => { if(e.target.closest('.idolplay,.idolclip')) markPlayed(); }, true);
+  if (C) {
+    // Real-voice clip: YouTube IFrame API when available; plain iframe (src swap) as fallback. Never TTS for the person.
+    let yp = null, endT = null, poll = null;
+    const playSeg = (st,en) => {
+      if (window.speechSynthesis) speechSynthesis.cancel();
+      if (yp && yp.loadVideoById) { endT = en; yp.loadVideoById({videoId:C.youtubeId, startSeconds:st, endSeconds:en}); }
+      else { const h = $('ytP'), f = h && (h.tagName==='IFRAME' ? h : h.querySelector('iframe')); if (f) f.src = ytSrc(st,en,1); }
+    };
+    $('s-idol').addEventListener('click', e => { const b = e.target.closest('.idolclip'); if(b){ e.stopPropagation(); playSeg(+b.dataset.s, +b.dataset.e); } });
+    const initYT = () => { try {
+      yp = new YT.Player('ytP', { videoId: C.youtubeId, playerVars: { start: Math.floor(C.start), end: Math.ceil(C.end), playsinline: 1, rel: 0, modestbranding: 1 },
+        host: 'https://www.youtube-nocookie.com',
+        events: { onStateChange: ev => { if (ev.data === 1) { markPlayed();
+            clearInterval(poll); poll = setInterval(()=>{ try { if(endT!=null && yp.getCurrentTime() >= endT){ yp.pauseVideo(); clearInterval(poll); } } catch(_){} }, 200); }
+          else clearInterval(poll); } } });
+      } catch(_) { yp = null; } };
+    if (window.YT && YT.Player) initYT();
+    else { const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { if(prev) prev(); initYT(); };
+      const sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(sc); }
+  }
   $('nextI').onclick = () => { LN.si = true; save(); goId('s-vocab'); };
   drawIdol();
 }
