@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FCE 每日 10 分鐘英文</title>
+<title>FCE 每日英文</title>
 <script>
 /* =====================================================================
  LESSON SCHEMA (swap only this object for a new lesson)
@@ -11,143 +11,128 @@
   date: "YYYY-MM-DD",            // used for localStorage key + completion code
   topic: "string",               // English topic title
   topicZh: "string",             // 中文主題
-  minutes: 10,                   // timer length
+  minutes: 8,                    // timer length (target 7-8 min)
   speaking: {
     part: "Part 1" | "Part 2",
     prompt: "string",            // examiner question / task
-    followUps: ["string"],       // optional extra questions
-    modelAnswer: "string",
+    followUps: ["string"],       // optional, keep 0-1 (1 prompt only)
+    modelAnswer: "string",       // max ~4 sentences
     tipZh: "string",             // 中文提示
-    phrases: [{ en, zh }]        // 3-4 useful phrases
+    phrases: [{ en, zh }]        // 3 useful phrases
   },
-  vocab: [{ word, pos, zh, example }],   // 8 items, flip cards
+  vocab: [{ word, pos, zh, example }],   // 5 items, flip cards; flips required = vocab.length
   grammar: {
     title: "string", explanationZh: "string",
     examples: [{ en, noteZh }],          // 3-4
     practice: [{ q, options:[..], answer: index, explanationZh }]
-         // OPTIONAL, 2 items: UNSCORED quick checks in 學習 step 3 (instant feedback).
+         // OPTIONAL, 1 item: UNSCORED quick checks in 學習 step 3 (instant feedback).
          // If omitted/empty, step 3 just requires a '我看懂了' tap.
   },
   useOfEnglish: {
     type: "Part 1" | "Part 2", instructionZh: "string",
     text: "string with gaps marked {1} {2} ...",
-    gaps: [{ n, options: [..] (Part 1) , answer: "string", explanationZh }]
+    gaps: [{ n, options: [..] (Part 1) , answer: "string", explanationZh }]   // 4 gaps; score shown uoe:X/gaps.length
          // Part 2 (open cloze): omit options; learner types
   },
-  idol: {                        // OPTIONAL step "跟偶像學英文" shown right after 口說 (~2 min). Omit → step skipped.
+  idol: {                        // OPTIONAL step "跟偶像學英文" shown right after 口說 (~1 min). Omit → step skipped.
     person: "Tsai Ing-wen" | "Hsiao Bi-khim" | "Puma Shen",
     personZh: "蔡英文",            // optional display name
     introZh: "string",           // 1-3 句真實背景 + 這段話的場合（日期、地點）
-    excerpt: "string",           // REAL verbatim English, 2-4 sentences; "…" marks cuts. NEVER invented.
+    excerpt: "string",           // REAL verbatim English, ONE sentence (~8-12 s of speech); "…" marks cuts. NEVER invented.
     sourceUrl: "https://...",    // official transcript (curl-verified 200)
     sourceLabel: "string",       // optional, e.g. "總統府英文網站逐字稿"
     videoUrl: "https://...",     // OPTIONAL YouTube link
     videoNote: "string",         // OPTIONAL, e.g. "新聞剪輯，未確認包含此句"
-    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 270 },  // OPTIONAL but preferred: the idol's REAL voice.
+    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 256 },  // OPTIONAL but preferred: the idol's REAL voice.
                                  // Seconds (integers ok) on that YouTube video where the excerpt is spoken.
                                  // Present → step embeds a youtube-nocookie player (playsinline, iPad-safe)
                                  // playing only start→end, + 🔁 replay; 'next' unlocks once it was played/tapped.
                                  // Absent → TTS fallback, clearly labeled 電腦發音. NEVER synthesize/clone a real voice.
                                  // Timestamps must be verified (captions via yt-dlp or transcribed audio).
-    chunks: [{ text, say, start, end }],  // 3-5 shadowing chunks. text may mark stress with *word* and pauses / or //;
+    chunks: [{ text, say, start, end }],  // 1-2 shadowing chunks. text may mark stress with *word* and pauses / or //;
                                  // start/end (seconds, OPTIONAL, same clip video) → chunk ▶ replays that bit in the real voice;
                                  // say = plain text for TTS fallback only (optional; defaults to text with marks stripped)
-    phrases: [{ en, zh, example }]   // exactly 2
+    phrases: [{ en, zh, example }]   // exactly 1 (min 1)
   },
-  quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 10 (may include 1 on the idol excerpt)
+  quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 6 (may include 1 on the idol excerpt)
  }
  FLOW: guided learning, one step at a time: 1 口說 → [跟偶像學英文, only if LESSON.idol; done after ≥1 ▶ play (real clip if idol.clip)] → 單字 (flip all cards) → 3 文法 (+practice)
  → 4 Use of English (scored, all gaps answered) → 測驗 unlocks (locked 🔒 before that).
  Learning progress saved in localStorage (same per-date key); 重做 clears everything.
- SCORING: quiz = 10 pts per question (score 0-100, shown live as 得分 X / 10);
- Use of English scored separately (X / number of gaps).
- Completion code: FCE-<date> quiz:<X>/10 uoe:<Y>/6 score:<0-100> missed:q3,q7  (or missed:none)
+ SCORING: all counts come from array lengths. Live header shows quiz 得分 X / quiz.length;
+ Use of English shown X / gaps.length. score 0-100 = round((quizCorrect+uoeCorrect)/(quiz.length+gaps.length)*100).
+ Completion code: FCE-<date> quiz:<X>/<quiz.length> uoe:<Y>/<gaps.length> score:<0-100> missed:q3,q7  (or missed:none)
+ e.g. FCE-2026-10-23 quiz:5/6 uoe:3/4 score:80 missed:q2
  ASSET: header + end screen use relative image "assets/monkey.jpg" (must exist next to the html).
 ===================================================================== */
 const LESSON = {
   date: "sample",
   topic: "Travel & holidays",
   topicZh: "旅行與假期",
-  minutes: 10,
+  minutes: 8,
   speaking: {
     part: "Part 1",
     prompt: "Where would you like to go on your next holiday? Why?",
-    followUps: ["Do you prefer travelling with your family or with friends?", "What do you usually do when you visit a new place?"],
-    modelAnswer: "I'd really love to go to Japan, especially Hokkaido in winter. I've never seen real snow, so I'm looking forward to trying skiing for the first time. My family went to Tokyo two years ago, and I enjoyed exploring the small streets and trying different kinds of street food. This time, though, I'd prefer to stay somewhere quieter and closer to nature. I think travelling is a great way to broaden your mind, because you get to experience a different culture instead of just reading about it online.",
+    modelAnswer: "I'd really love to go to Japan, especially Hokkaido in winter. I've never seen real snow, so I'm looking forward to trying skiing for the first time. I'd prefer to stay somewhere quiet and close to nature rather than in a big city. I think travelling is a great way to broaden your mind.",
     tipZh: "Part 1：先直接說出地點，再給 1–2 個理由。可以用「I've never…, so I'm looking forward to…」連結經驗和期待，聽起來很自然。",
     phrases: [
       { en: "I'd really love to go to…", zh: "我真的很想去……" },
       { en: "I'm looking forward to + V-ing", zh: "我很期待……" },
-      { en: "I'd prefer to… rather than…", zh: "我寧願……而不是……" },
-      { en: "It's a great way to broaden your mind.", zh: "這是開闊眼界的好方法。" }
+      { en: "I'd prefer to… rather than…", zh: "我寧願……而不是……" }
     ]
   },
   idol: {
     person: "Hsiao Bi-khim", personZh: "蕭美琴",
     introZh: "蕭美琴副總統在美國長大、英文非常流利。這是她出訪帛琉時，在帛琉總統惠恕仁（Whipps）6 月 7 日（當地時間）歡迎晚宴上的致詞。影片是她本人的聲音。",
-    excerpt: "And like the Palauan people, we are also island people. And as we look to the Pacific, we look at the Pacific with an open heart, an open mind, and with a warmth and hospitality that continue to bring us together and demonstrate that we are both countries that are forces for good in the world.",
+    excerpt: "And like the Palauan people, we are also island people. And as we look to the Pacific, we look at the Pacific with an open heart, an open mind …",
     sourceUrl: "https://english.president.gov.tw/NEWS/7155", sourceLabel: "總統府英文網站逐字稿",
     videoUrl: "https://www.youtube.com/watch?v=hoFt7V1omaU&t=244s", videoNote: "Rti English 新聞，4:04 起為本人原音",
-    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 270 },
+    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 256 },
     chunks: [
       { text: "And like the *Palauan* people, / we are also *island* people. //", start: 244, end: 249 },
-      { text: "we look at the *Pacific* / with an *open heart*, / an *open mind*, //", start: 249, end: 258 },
-      { text: "that continue to *bring us together* //", start: 257, end: 263 },
-      { text: "we are both countries / that are *forces for good* / in the world.", start: 262, end: 270 }
+      { text: "we look at the *Pacific* / with an *open heart*, / an *open mind*", start: 249, end: 256 }
     ],
     phrases: [
-      { en: "with an open heart and an open mind", zh: "敞開心胸、保持開放的態度", example: "I try to visit new places with an open heart and an open mind." },
-      { en: "a force for good", zh: "一股向善的力量", example: "Volunteering can be a real force for good in a small town." }
+      { en: "with an open heart and an open mind", zh: "敞開心胸、保持開放的態度", example: "I try to visit new places with an open heart and an open mind." }
     ]
   },
   vocab: [
     { word: "destination", pos: "n.", zh: "目的地", example: "Kyoto is a popular destination for tourists." },
     { word: "accommodation", pos: "n.", zh: "住宿", example: "We booked our accommodation online." },
     { word: "set off", pos: "phr. v.", zh: "出發", example: "We set off early to avoid the traffic." },
-    { word: "itinerary", pos: "n.", zh: "行程表", example: "Our itinerary includes three cities in five days." },
     { word: "souvenir", pos: "n.", zh: "紀念品", example: "I bought a key ring as a souvenir." },
-    { word: "abroad", pos: "adv.", zh: "在國外；到國外", example: "Have you ever travelled abroad?" },
-    { word: "luggage", pos: "n. (不可數)", zh: "行李", example: "How much luggage are you taking?" },
-    { word: "look forward to", pos: "phr. v.", zh: "期待（+ V-ing / N）", example: "I'm looking forward to seeing you." }
+    { word: "luggage", pos: "n. (不可數)", zh: "行李", example: "How much luggage are you taking?" }
   ],
   grammar: {
     title: "Verb + V-ing or to + V (enjoy doing / decide to do)",
-    explanationZh: "有些動詞後面接 V-ing（enjoy, finish, avoid, mind, practise, keep, suggest），有些接 to V（decide, hope, plan, want, agree, refuse, expect）。注意：look forward to 的 to 是介系詞，後面要接 V-ing！remember/forget/stop + to V 和 + V-ing 意思不同：stop to buy（停下來去買）vs stop buying（停止買）。會考與 FCE 都很常考。",
+    explanationZh: "有些動詞後面接 V-ing（enjoy, finish, avoid, mind），有些接 to V（decide, hope, plan, want）。注意：look forward to 的 to 是介系詞，後面要接 V-ing！",
     examples: [
       { en: "We enjoyed swimming in the sea.", noteZh: "enjoy + V-ing" },
       { en: "My parents decided to visit Tainan.", noteZh: "decide + to V" },
-      { en: "I'm looking forward to visiting Japan.", noteZh: "look forward to + V-ing（to 是介系詞）" },
-      { en: "We stopped to take photos. / We stopped taking photos.", noteZh: "停下來去拍照 vs 不再拍照" }
+      { en: "I'm looking forward to visiting Japan.", noteZh: "look forward to + V-ing（to 是介系詞）" }
     ],
     practice: [
-      { q: "Would you mind ___ the window?", options: ["open", "to open", "opening", "opened"], answer: 2, explanationZh: "mind + V-ing。" },
       { q: "They hope ___ Europe next summer.", options: ["visiting", "to visit", "visit", "visited"], answer: 1, explanationZh: "hope + to V。" }
     ]
   },
   useOfEnglish: {
     type: "Part 1",
     instructionZh: "選出最適合每個空格的字（FCE Part 1 多選克漏字）。",
-    text: "Last summer my family went on a trip to Penghu. We {1} off very early in the morning to catch the ferry. Our {2} was a small guesthouse near the beach, and the owner was very friendly. Every day we {3} swimming and cycling around the islands. I had never {4} such clear blue water before! On the last day I bought some {5} for my classmates. I'm already looking forward to {6} back next year.",
+    text: "Last summer my family went on a trip to Penghu. We {1} off very early in the morning to catch the ferry. Our {2} was a small guesthouse near the beach. On the last day I bought some {3} for my classmates. I'm already looking forward to {4} back next year.",
     gaps: [
       { n: 1, options: ["took", "set", "got", "put"], answer: "set", explanationZh: "set off = 出發。" },
       { n: 2, options: ["accommodation", "destination", "luggage", "journey"], answer: "accommodation", explanationZh: "住的地方 = accommodation。" },
-      { n: 3, options: ["made", "did", "went", "played"], answer: "went", explanationZh: "go swimming / go cycling（go + V-ing 活動）。" },
-      { n: 4, options: ["watched", "looked", "seen", "noticed"], answer: "seen", explanationZh: "had never seen = 過去完成式；see 指「看到」景色。" },
-      { n: 5, options: ["souvenirs", "memories", "remains", "rewards"], answer: "souvenirs", explanationZh: "買給同學的紀念品 = souvenirs。" },
-      { n: 6, options: ["come", "to come", "coming", "came"], answer: "coming", explanationZh: "look forward to + V-ing。" }
+      { n: 3, options: ["souvenirs", "memories", "remains", "rewards"], answer: "souvenirs", explanationZh: "買給同學的紀念品 = souvenirs。" },
+      { n: 4, options: ["come", "to come", "coming", "came"], answer: "coming", explanationZh: "look forward to + V-ing。" }
     ]
   },
   quiz: [
     { id: "q1", q: "(FCE) We had to pay extra because we had too much ___.", options: ["luggages", "baggages", "luggage", "bags of luggages"], answer: 2, explanationZh: "luggage 是不可數名詞，沒有複數 -s。" },
-    { id: "q2", q: "(會考) A: Have you ever been to Korea? B: No, but I ___ there next month.", options: ["am going", "went", "have gone", "go"], answer: 0, explanationZh: "已安排好的未來計畫用現在進行式 am going。" },
-    { id: "q3", q: "(FCE) The flight was cancelled, so we decided ___ the train instead.", options: ["taking", "take", "took", "to take"], answer: 3, explanationZh: "decide + to V。" },
-    { id: "q4", q: "(會考) 公告：『Please keep your passport with you at all times.』這句話是要旅客做什麼？", options: ["隨身攜帶護照", "把護照交給導遊", "在機場申請護照", "把護照放在行李箱"], answer: 0, explanationZh: "keep … with you at all times = 隨時帶在身上。" },
-    { id: "q5", q: "(FCE) Before we ___ off, Dad checked the itinerary again.", options: ["went", "set", "took", "made"], answer: 1, explanationZh: "set off = 出發。" },
-    { id: "q6", q: "(會考) Tina enjoys ___ new food when she travels abroad.", options: ["try", "to try", "trying", "tried"], answer: 2, explanationZh: "enjoy + V-ing。" },
-    { id: "q7", q: "(FCE) Hsiao Bi-khim: \"we look at the Pacific with an open heart, an open ___\"", options: ["door", "mind", "eye", "hand"], answer: 1, explanationZh: "原文：with an open heart, an open mind。open mind＝心胸開放、願意接受新想法；open heart＝真誠熱情。" },
-    { id: "q8", q: "(會考) My brother has never traveled ___. He has only been to places in Taiwan.", options: ["abroad", "aboard", "away", "across"], answer: 0, explanationZh: "abroad = 到國外；aboard = 在（船/飛機）上。" },
-    { id: "q9", q: "(FCE) Which word means 'a plan of a journey, with places and times'?", options: ["destination", "itinerary", "souvenir", "accommodation"], answer: 1, explanationZh: "itinerary = 行程表。" },
-    { id: "q10", q: "(會考) We stopped ___ some photos because the sunset was so beautiful.", options: ["to take", "taking", "take", "took"], answer: 0, explanationZh: "stop to V = 停下來去做某事；stop V-ing = 停止做。這裡是停下來拍照。" }
+    { id: "q2", q: "(FCE) The flight was cancelled, so we decided ___ the train instead.", options: ["taking", "take", "took", "to take"], answer: 3, explanationZh: "decide + to V。" },
+    { id: "q3", q: "(FCE) Before we ___ off, Dad checked the map again.", options: ["went", "set", "took", "made"], answer: 1, explanationZh: "set off = 出發。" },
+    { id: "q4", q: "(會考) Tina enjoys ___ new food when she travels.", options: ["try", "to try", "trying", "tried"], answer: 2, explanationZh: "enjoy + V-ing。" },
+    { id: "q5", q: "(FCE) Hsiao Bi-khim: \"we look at the Pacific with an open heart, an open ___\"", options: ["door", "mind", "eye", "hand"], answer: 1, explanationZh: "原文：with an open heart, an open mind。open mind＝心胸開放、願意接受新想法。" },
+    { id: "q6", q: "(FCE) Which word means 'the place you are travelling to'?", options: ["destination", "souvenir", "luggage", "accommodation"], answer: 0, explanationZh: "destination = 目的地。" }
   ]
 };
 </script>
@@ -252,7 +237,7 @@ section.step-hide{display:none}
 <body>
 <div class="hero"><div class="art" role="img" aria-label="monkey reading a book"></div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
 <header><div class="hrow">
-  <div class="live" id="live">得分 <b id="liveScore">0</b> / 10</div>
+  <div class="live" id="live">得分 <b id="liveScore">0</b> / ?</div>
   <div class="timer"><span class="time" id="time"></span><button class="sm solid" id="tbtn">開始</button><button class="sm ghost" id="treset">重設</button></div>
 </div>
 <nav class="steps" id="steps"></nav><div class="steplbl" id="steplbl"></div></header>
@@ -285,15 +270,15 @@ function speak(t){ if(!window.speechSynthesis){ alert('此瀏覽器不支援語�
 document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if(b){ e.stopPropagation(); speak(b.getAttribute('data-say')); } });
 
 /* header + timer */
-$('title').textContent = 'FCE · ' + L.date;
+$('title').textContent = 'FCE · ' + L.date; document.title = `FCE 每日 ${L.minutes||8} 分鐘英文`;
 $('subtitle').textContent = L.topic + '｜' + L.topicZh;
-let left = state.timeLeft != null ? state.timeLeft : (L.minutes||10)*60, tid = null;
+let left = state.timeLeft != null ? state.timeLeft : (L.minutes||8)*60, tid = null;
 const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
 function drawT(){ $('time').textContent = fmt(left); $('time').classList.toggle('done', left<=0); }
 $('tbtn').onclick = () => { if(tid){ clearInterval(tid); tid=null; $('tbtn').textContent='繼續'; return; }
   if(left<=0) return; $('tbtn').textContent='暫停';
   tid = setInterval(()=>{ left--; state.timeLeft=left; drawT(); if(left%5===0) save(); if(left<=0){ clearInterval(tid); tid=null; $('tbtn').textContent='時間到'; save(); } },1000); };
-$('treset').onclick = () => { clearInterval(tid); tid=null; left=(L.minutes||10)*60; state.timeLeft=left; save(); $('tbtn').textContent='開始'; drawT(); };
+$('treset').onclick = () => { clearInterval(tid); tid=null; left=(L.minutes||8)*60; state.timeLeft=left; save(); $('tbtn').textContent='開始'; drawT(); };
 drawT();
 
 /* 1 speaking */
@@ -468,7 +453,7 @@ window.__fce = { unlocked, quizUnlocked, go, state };
 /* end */
 function showEnd(){
   const missed = Q.filter(q=>state.quiz[q.id]!==q.answer);
-  const score = Q.length - missed.length, pts = Math.round(score/Q.length*100), uo = uoeScore(), un = U.gaps.length;
+  const score = Q.length - missed.length, uo = uoeScore(), un = U.gaps.length, pts = Math.round((score+uo)/((Q.length+un)||1)*100);
   state.score = score; state.points = pts; state.uoeScore = uo; state.completedAt = state.completedAt || new Date().toISOString(); save();
   const code = `FCE-${L.date} quiz:${score}/${Q.length} uoe:${uo}/${un} score:${pts} missed:${missed.length?missed.map(q=>q.id).join(','):'none'}`;
   const uMiss = U.gaps.filter(g=>!(g.n in state.uoe) || String(state.uoe[g.n]).trim().toLowerCase()!==g.answer.toLowerCase());
