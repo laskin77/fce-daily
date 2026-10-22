@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>跟偶像學英文｜Sample</title>
+<style>
+:root{--paper:#f0ece0;--paper2:#e8e1d0;--brown:#6b4a35;--sage:#8a9a7b;--ink:#3a3632;--mute:#857a6e;
+--serif:Georgia,"Times New Roman","Noto Serif TC",serif;--sans:"PingFang TC","Noto Sans TC",-apple-system,"Helvetica Neue",sans-serif;
+--wob:255px 15px 225px 15px/15px 225px 15px 255px}
+*{box-sizing:border-box}html{background:var(--paper)}
+body{margin:0;font-family:var(--sans);color:var(--ink);line-height:1.8;-webkit-text-size-adjust:100%;background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .22 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hero{max-width:760px;margin:auto;padding:max(28px,env(safe-area-inset-top)) 24px 0;text-align:center}
+.art{height:170px;background:url(assets/monkey.jpg) no-repeat center 82%/auto 380px;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(ellipse 55% 60% at 50% 55%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 55% 60% at 50% 55%,#000 55%,transparent 100%)}
+h1{font-family:var(--serif);font-weight:400;letter-spacing:.2em;font-size:1.3rem;color:var(--brown);margin:14px 0 4px}
+.sub{font-size:.85rem;color:var(--mute);letter-spacing:.08em}
+main{max-width:760px;margin:auto;padding:20px 22px 100px}
+section{padding:30px 4px 34px}
+section::before{content:"";display:block;width:56px;height:6px;margin:0 auto 30px;background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 6'%3E%3Cpath d='M1 3.5c9-2 17 1.5 27-.5s17-1.5 27 .5' fill='none' stroke='%238a9a7b' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E")}
+h2{font-family:var(--serif);font-weight:400;font-size:.9rem;letter-spacing:.2em;color:var(--brown);margin:0 0 18px}
+h3{font-family:var(--serif);font-weight:400;font-size:1.02rem;margin:20px 0 8px}
+.zh{color:var(--mute);font-size:.92rem}
+button{font:inherit;font-size:.95rem;cursor:pointer;border:1.2px solid var(--brown);border-radius:var(--wob);padding:7px 16px;background:transparent;color:var(--brown);touch-action:manipulation;-webkit-tap-highlight-color:transparent;margin:3px}
+button:active{background:var(--paper2)}button.solid{background:var(--brown);color:var(--paper)}button.sm{padding:3px 11px;font-size:.85rem}
+.tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px}
+.prompt{font-family:var(--serif);font-size:1.12rem;line-height:1.75;padding:6px 0 6px 18px;border-left:1.5px solid var(--sage)}
+.card{margin-top:14px;padding:14px 18px;border:1px dashed rgba(107,74,53,.45);border-radius:var(--wob)}
+.chunk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(107,74,53,.15);font-family:var(--serif);font-size:1.08rem}
+.chunk b{color:var(--brown);text-decoration:underline wavy var(--sage);font-weight:400}
+.src{font-size:.8rem;color:var(--mute);word-break:break-all}a{color:var(--brown)}
+.opt{display:block;width:100%;text-align:left;margin:8px 0}.ok{background:rgba(138,154,123,.3)!important}.bad{background:rgba(180,90,70,.18)!important}
+</style>
+</head>
+<body>
+<div class="hero"><div class="art" role="img" aria-label="monkey"></div><h1>跟偶像學英文</h1><div class="sub">Learn English from your idol · Sample lesson</div>
+<div class="tabs" id="tabs"></div></div>
+<main>
+<section><h2>① 認識偶像</h2><div id="intro"></div>
+<p class="zh">⚠️ 以下英文全部是本人<strong>真實說過</strong>的話（附官方逐字稿來源），不是編的喔！</p></section>
+<section><h2>② LISTEN 聽聽看</h2><p class="zh">先看原影片／聽原音；沒網路或找不到片段時，按「🔊 英式發音朗讀」當備用（這是電腦聲音，不是本人）。</p>
+<div id="listen"></div></section>
+<section><h2>③ SHADOWING 跟讀</h2><p class="zh">一段一段按 ▶，聽完馬上跟著唸。<b style="color:var(--brown)">底線粗體</b>＝重音要加強；「/」＝短停頓，「//」＝長停頓。</p><div id="shadow"></div></section>
+<section><h2>④ 偷學好句型</h2><div id="phr"></div></section>
+<section><h2>⑤ 換你當總統！</h2>
+<p class="prompt">如果你是總統，用英文介紹台灣 30 秒。<br><span class="zh">If you were the president, introduce Taiwan in 30 seconds.</span></p>
+<div class="card"><b>句子開頭參考：</b><ul>
+<li>Good morning, everyone. It is a true honor to…</li>
+<li>Taiwan is a small island, but…</li>
+<li>The ocean does not separate us. Instead, it…</li>
+<li>We are not alone, because…</li>
+<li>Thank you for standing with Taiwan.</li></ul></div>
+<p><button class="solid" id="rec">🎙️ 開始錄音</button> <span id="rt" class="zh"></span></p><audio id="play" controls style="display:none;width:100%"></audio>
+<p class="zh" id="recmsg"></p></section>
+<section><h2>⑥ MINI CHECK 小測驗</h2><div id="quiz"></div></section>
+</main>
+<script>
+const IDOLS={
+tsai:{name:"蔡英文 Tsai Ing-wen",
+intro:"<p>蔡英文是台灣第一位女性總統（2016–2024）。她在台大法律系畢業後出國留學：在美國<b>康乃爾大學（Cornell）</b>取得法學碩士 LL.M.，再到英國<b>倫敦政經學院（LSE）</b>取得法學博士 PhD。所以她的英文帶一點英式味道，用字正式又清楚，很適合學「演講英文」！</p><p class='src'>來源：<a href='https://en.wikipedia.org/wiki/Tsai_Ing-wen' target='_blank'>Wikipedia – Tsai Ing-wen</a>（學歷欄）</p>",
+ctx:"2023/4/5（美國時間）在美國加州雷根總統圖書館，和美國眾議院議長 McCarthy 會面後的演講。",
+video:"https://www.youtube.com/watch?v=KzINf6vK3ek",videoLabel:"Ronald Reagan Presidential Foundation 官方頻道影片",
+src:"https://english.president.gov.tw/NEWS/6487",srcLabel:"中華民國總統府英文網站 官方逐字稿",
+text:"Their presence and unwavering support reassure the people of Taiwan that we are not isolated, and we are not alone. … I also highlighted a belief which President Reagan championed, that to preserve peace, we must be strong. I would like to add that we are stronger when we are together.",
+chunks:["Their presence / and <b>unwavering</b> support","<b>reassure</b> the people of Taiwan","that we are not <b>isolated</b>, / and we are not <b>alone</b>. //","To preserve <b>peace</b>, / we must be <b>strong</b>. //","I would like to <b>add</b> / that we are <b>stronger</b> / when we are <b>together</b>."],
+chunkTts:["Their presence and unwavering support","reassure the people of Taiwan","that we are not isolated, and we are not alone.","To preserve peace, we must be strong.","I would like to add that we are stronger when we are together."],
+phrases:[{en:"We are not A, and we are not B.",zh:"重複「we are not」排比句，聽起來很有力量。演講、作文結尾都好用。",ex:"We are not perfect, and we are not finished — but we keep trying."},
+{en:"I would like to add that …",zh:"「我想補充……」很有禮貌的加入意見方式，FCE 口說 Part 4 討論時超好用！",ex:"I would like to add that reading every day also helps your writing."}]},
+hsiao:{name:"蕭美琴 Hsiao Bi-khim",
+intro:"<p>蕭美琴是台灣現任副總統（2024–）。她在美國長大、讀書（美國 Oberlin College 學士、Columbia University 碩士），曾任駐美代表，英文非常自然流利。</p><p class='src'>（學歷資訊為一般公開資料，請以 <a href='https://en.wikipedia.org/wiki/Hsiao_Bi-khim' target='_blank'>Wikipedia – Hsiao Bi-khim</a> 為準）</p>",
+ctx:"2026/6/7 訪問友邦帛琉（Palau），在帛琉總統 Whipps 的歡迎晚宴上致詞。",
+video:"https://www.youtube.com/watch?v=hoFt7V1omaU",videoLabel:"Rti English 新聞影片〈Vice President highlights cooperation at welcome dinner in Palau〉（新聞剪輯，不一定包含下面這一句）",
+src:"https://english.president.gov.tw/NEWS/7155",srcLabel:"中華民國總統府英文網站 官方逐字稿",
+text:"But I think it is important to share with all of you that the oceans between us, the Pacific Ocean, does not separate us. Instead, it connects us. It connects our culture, it connects our people, it also connects our ideas.",
+chunks:["The oceans between us, / the Pacific Ocean, / does <b>not</b> separate us. //","<b>Instead</b>, / it <b>connects</b> us. //","It connects our <b>culture</b>, / it connects our <b>people</b>, /","it also connects our <b>ideas</b>."],
+chunkTts:["The oceans between us, the Pacific Ocean, does not separate us.","Instead, it connects us.","It connects our culture, it connects our people,","it also connects our ideas."],
+phrases:[{en:"A does not …. Instead, it …",zh:"先否定、再用 Instead 說出真正的意思（不是……而是……）。寫作文轉折超加分。",ex:"Homework does not make me tired. Instead, it makes me feel ready for the test."},
+{en:"It connects …, it connects …, it also connects …",zh:"同一個動詞重複三次（三段式排比），是演講最常用的技巧。",ex:"Music connects friends, it connects families, it also connects strangers."}]},
+puma:{name:"沈伯洋 Puma Shen",
+intro:"<p>沈伯洋是台灣的立法委員，也是大學犯罪學教授，創立「黑熊學院」（Kuma Academy）和研究假訊息的 DoubleThink Lab。他常用英文接受國外訪問，說英文時很口語、很幽默。</p>",
+ctx:"2024 年 Politics Possible podcast 英文訪談。中國的假訊息說他是「CIA 間諜」，他怎麼回應？（這是口語訪談，所以會有 like、actually 這些口語詞）",
+video:"",videoLabel:"",
+src:"https://wwsg.com/speaker-news/politics-possible-podcast-how-taiwans-young-techies-fight-political-disinformation/",srcLabel:"Politics Possible podcast 逐字稿（WWSG 轉載，2024/7/5）",
+text:"I actually tease myself, saying that I'm a \"CIA baby\" right now. And that's the only way—to use humor to counter that kind of disinformation. … So that's my way—to use, like, humor over rumor.",
+chunks:["I actually <b>tease</b> myself, / saying that I'm a <b>CIA baby</b> right now. //","And that's the <b>only</b> way //","to use <b>humor</b> / to <b>counter</b> that kind of disinformation. //","So that's <b>my</b> way — / to use <b>humor</b> over <b>rumor</b>."],
+chunkTts:["I actually tease myself, saying that I'm a CIA baby right now.","And that's the only way","to use humor to counter that kind of disinformation.","So that's my way, to use humor over rumor."],
+phrases:[{en:"That's the only way to …",zh:"「那是唯一能……的方法」表達強烈看法。",ex:"Practising every day is the only way to get better at speaking."},
+{en:"humor over rumor",zh:"押韻的好記說法：用幽默戰勝謠言。A over B＝選 A 勝過 B。",ex:"Kindness over anger — that's my rule at school."}]}};
+const QUIZ=[
+{who:"tsai",q:"Tsai: “we are not isolated” — isolated 的意思是？",o:["被孤立的","很有名的","很生氣的","被保護的"],a:0},
+{who:"tsai",q:"“To preserve peace, we must be ___.”（依照原文）",o:["kind","rich","strong","quiet"],a:2},
+{who:"hsiao",q:"Hsiao: the ocean “does not separate us. Instead, it ___ us.”",o:["divides","connects","protects","helps"],a:1},
+{who:"hsiao",q:"Instead 在這裡的意思最接近？",o:["而且","因為","所以","反而；取而代之"],a:3},
+{who:"puma",q:"Puma: “humor over rumor” 是指？",o:["謠言比幽默重要","用幽默對抗謠言","不要開玩笑","散播謠言很好笑"],a:1}];
+let cur="tsai",curAudio=null;
+function say(t){if(!('speechSynthesis' in window)){alert('此裝置不支援朗讀');return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.85;const v=speechSynthesis.getVoices().find(v=>v.lang==='en-GB');if(v)u.voice=v;speechSynthesis.speak(u)}
+const $=id=>document.getElementById(id);
+function render(){const d=IDOLS[cur];
+$('tabs').innerHTML=Object.keys(IDOLS).map(k=>`<button class="${k===cur?'solid':''}" onclick="cur='${k}';render()">${IDOLS[k].name}</button>`).join('');
+$('intro').innerHTML=`<h3>${d.name}</h3>`+d.intro;
+$('listen').innerHTML=`<p class="zh">📍 ${d.ctx}</p>`+(d.video?`<p><a href="${d.video}" target="_blank">▶ 看 YouTube 原影片</a><br><span class="src">${d.videoLabel}</span></p>`:`<p class="zh">（這段沒有找到可驗證的影片，只有官方逐字稿）</p>`)+
+`<div class="card prompt">${d.text}</div><p><button onclick="say(IDOLS[cur].text.replace(/…/g,''))">🔊 英式發音朗讀（備用）</button></p><p class="src">逐字稿來源：<a href="${d.src}" target="_blank">${d.srcLabel}</a>（“…” 表示中間省略）</p>`;
+$('shadow').innerHTML=d.chunks.map((c,i)=>`<div class="chunk"><button class="sm" onclick="say(IDOLS[cur].chunkTts[${i}])">▶</button><span>${c}</span></div>`).join('')+`<p><button onclick="say(IDOLS[cur].chunkTts.join(' '))">▶ 整段連起來</button></p>`;
+$('phr').innerHTML=d.phrases.map(p=>`<div class="card"><b style="font-family:var(--serif);font-size:1.08rem">${p.en}</b> <button class="sm" onclick="say(${JSON.stringify(p.ex).replace(/"/g,'&quot;')})">🔊</button><p class="zh">${p.zh}</p><p>✏️ 我的例句：<i>${p.ex}</i></p></div>`).join('');}
+let qi=0,score=0;
+function quiz(){const el=$('quiz');if(qi>=QUIZ.length){el.innerHTML=`<p class="prompt">得分 ${score} / ${QUIZ.length} ${score===QUIZ.length?'🐵 太厲害了！':'🐵 再聽一次原音試試看！'}</p><button onclick="qi=0;score=0;quiz()">重做</button>`;return}
+const q=QUIZ[qi];el.innerHTML=`<p class="zh">第 ${qi+1} / ${QUIZ.length} 題 · 得分 ${score} · ${IDOLS[q.who].name}</p><p><b>${q.q}</b></p>`+q.o.map((o,i)=>`<button class="opt" data-i="${i}">${String.fromCharCode(65+i)}. ${o}</button>`).join('')+`<p id="fb"></p>`;
+el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;el.querySelectorAll('.opt').forEach(x=>x.disabled=true);el.querySelectorAll('.opt')[q.a].classList.add('ok');if(i===q.a){score++;$('fb').textContent='✅ 答對了！'}else{b.classList.add('bad');$('fb').textContent='❌ 正確答案是 '+String.fromCharCode(65+q.a)}
+const n=document.createElement('button');n.className='solid';n.textContent=qi+1<QUIZ.length?'下一題 →':'看分數';n.onclick=()=>{qi++;quiz()};$('fb').after(n)})}
+let mr=null,chunks=[],tmr=null;
+$('rec').onclick=async()=>{if(!window.MediaRecorder||!navigator.mediaDevices){$('recmsg').textContent='這個瀏覽器不能錄音，沒關係，對著鏡子大聲說 30 秒也很棒！';return}
+if(mr&&mr.state==='recording'){mr.stop();return}
+try{const s=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];mr=new MediaRecorder(s);mr.ondataavailable=e=>chunks.push(e.data);
+mr.onstop=()=>{clearInterval(tmr);s.getTracks().forEach(t=>t.stop());const b=new Blob(chunks,{type:mr.mimeType||'audio/mp4'});$('play').src=URL.createObjectURL(b);$('play').style.display='block';$('rec').textContent='🎙️ 再錄一次';$('rt').textContent='聽聽看自己像不像總統？'};
+mr.start();let t=30;$('rec').textContent='⏹ 停止';$('rt').textContent=t+' 秒';tmr=setInterval(()=>{t--;$('rt').textContent=t+' 秒';if(t<=0)mr.stop()},1000)}catch(e){$('recmsg').textContent='沒有取得麥克風權限，可以直接大聲說就好！'}};
+if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=()=>{};
+render();quiz();
+</script>
+</body>
+</html>
