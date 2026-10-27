@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FCE 每日英文</title>
+<script>
+/* =====================================================================
+ LESSON SCHEMA (swap only this object for a new lesson)
+ {
+  date: "YYYY-MM-DD",            // used for localStorage key + completion code
+  topic: "string",               // English topic title
+  topicZh: "string",             // 中文主題
+  minutes: 8,                    // timer length (target 7-8 min)
+  speaking: {                   // REQUIRED only when idol is absent; if LESSON.idol is present this step is SKIPPED (may be omitted)
+    part: "Part 1" | "Part 2",
+    prompt: "string",            // examiner question / task
+    followUps: ["string"],       // optional, keep 0-1 (1 prompt only)
+    modelAnswer: "string",       // max ~4 sentences
+    tipZh: "string",             // 中文提示
+    phrases: [{ en, zh }]        // 3 useful phrases
+  },
+  vocab: [{ word, pos, zh, example }],   // 5 items, flip cards; flips required = vocab.length
+  grammar: {
+    title: "string", explanationZh: "string",
+    examples: [{ en, noteZh }],          // 3-4
+    practice: [{ q, options:[..], answer: index, explanationZh }]
+         // OPTIONAL, 1 item: UNSCORED quick checks in 學習 step 3 (instant feedback).
+         // If omitted/empty, step 3 just requires a '我看懂了' tap.
+  },
+  useOfEnglish: {
+    type: "Part 1" | "Part 2", instructionZh: "string",
+    text: "string with gaps marked {1} {2} ...",
+    gaps: [{ n, options: [..] (Part 1) , answer: "string", explanationZh }]   // 4 gaps; score shown uoe:X/gaps.length
+         // Part 2 (open cloze): omit options; learner types
+  },
+  idol: {                        // OPTIONAL step "原聲跟讀" (跟偶像學英文). Present → it REPLACES 口說 (both are listen-then-repeat)
+                                 // and becomes step 1 (~2-3 min). Omit → step skipped, 口說 is step 1 as before.
+    person: "Tsai Ing-wen" | "Hsiao Bi-khim" | "Puma Shen",
+    personZh: "蔡英文",            // optional display name
+    introZh: "string",           // 1-3 句真實背景 + 這段話的場合（日期、地點）
+    excerpt: "string",           // REAL verbatim English, 2-3 real sentences (~20-30 s of speech); "…" marks cuts. NEVER invented.
+    sourceUrl: "https://...",    // official transcript (curl-verified 200)
+    sourceLabel: "string",       // optional, e.g. "總統府英文網站逐字稿"
+    videoUrl: "https://...",     // OPTIONAL YouTube link
+    videoNote: "string",         // OPTIONAL, e.g. "新聞剪輯，未確認包含此句"
+    clip: { youtubeId: "hoFt7V1omaU", start: 244, end: 256 },  // OPTIONAL but preferred: the idol's REAL voice.
+                                 // Seconds (integers ok) on that YouTube video where the excerpt is spoken.
+                                 // Present → step embeds a youtube-nocookie player (playsinline, iPad-safe)
+                                 // playing only start→end, + 🔁 replay; 'next' unlocks once it was played/tapped.
+                                 // Absent → TTS fallback, clearly labeled 電腦發音. NEVER synthesize/clone a real voice.
+                                 // Timestamps must be verified (captions via yt-dlp or transcribed audio).
+    chunks: [{ text, say, start, end }],  // 3-4 shadowing chunks, each with real-voice start/end. text may mark stress with *word* and pauses / or //;
+                                 // start/end (seconds, OPTIONAL, same clip video) → chunk ▶ replays that bit in the real voice;
+                                 // say = plain text for TTS fallback only (optional; defaults to text with marks stripped)
+    phrases: [{ en, zh, example }],  // exactly 2
+    respond: { promptEn, promptZh, starters: ["string"] }  // OPTIONAL short speaking response: FCE-style question tied
+                                 // to the clip; Roby answers aloud in 1-2 sentences (2-3 starters). Not required to unlock.
+  },
+  quiz: [{ id:"q1", q, options:[4], answer: index(0-3), explanationZh }]  // 6 (may include 1 on the idol excerpt)
+ }
+ FLOW: guided learning, one step at a time: 1 = 原聲跟讀 if LESSON.idol (done after ≥1 ▶ play) ELSE 口說 → 單字 (flip all cards) → 3 文法 (+practice)
+ → 4 Use of English (scored, all gaps answered) → 測驗 unlocks (locked 🔒 before that).
+ Learning progress saved in localStorage (same per-date key); 重做 clears everything.
+ SCORING: all counts come from array lengths. Live header shows quiz 得分 X / quiz.length;
+ Use of English shown X / gaps.length. score 0-100 = round((quizCorrect+uoeCorrect)/(quiz.length+gaps.length)*100).
+ Completion code: FCE-<date> quiz:<X>/<quiz.length> uoe:<Y>/<gaps.length> score:<0-100> missed:q3,q7  (or missed:none)
+ e.g. FCE-2026-10-23 quiz:5/6 uoe:3/4 score:80 missed:q2
+ ASSET: header + end screen use relative image "assets/monkey.jpg" (must exist next to the html).
+===================================================================== */
+const LESSON = {
+ "date": "2026-10-27",
+ "topic": "Doing good & present perfect vs past simple",
+ "topicZh": "做有意義的事＋現在完成式 vs 過去式時態陷阱",
+ "minutes": 8,
+ "idol": {
+  "person": "Hsiao Bi-khim",
+  "personZh": "蕭美琴",
+  "introZh": "2025 年 11 月 7 日，蕭美琴副總統在比利時布魯塞爾的歐洲議會，出席「對中政策跨國議會聯盟」（IPAC）年會並用英文演講，是第一位在歐洲議會演講的台灣副總統。這段是演講結尾，影片是她本人的原音。",
+  "excerpt": "When it comes to international participation, things have been so hard for us Taiwanese. And yet, Taiwan has always sought to be a force for good in the world, and we are grateful to all of you for your continuing support. We don't just want to survive — we want democracies to thrive.",
+  "sourceUrl": "https://english.president.gov.tw/News/7039",
+  "sourceLabel": "總統府英文網站逐字稿",
+  "videoUrl": "https://www.youtube.com/watch?v=IW5aGjkw8wA&t=148s",
+  "videoNote": "中央社 Focus Taiwan 官方影片，2:28 起為本人原音（已用 YouTube 字幕逐字核對）",
+  "clip": {
+   "youtubeId": "IW5aGjkw8wA",
+   "start": 148.0,
+   "end": 175.8
+  },
+  "chunks": [
+   {
+    "text": "When it comes to international *participation*, / things *have been* so *hard* / for us Taiwanese. //",
+    "start": 148.0,
+    "end": 155.6
+   },
+   {
+    "text": "And *yet*, / Taiwan has *always sought* / to be a *force for good* / in the world, //",
+    "start": 155.6,
+    "end": 163.8
+   },
+   {
+    "text": "and we are *grateful* to all of you / for your *continuing support*. //",
+    "start": 163.8,
+    "end": 169.6
+   },
+   {
+    "text": "We don't just want to *survive* — / we want democracies to *thrive*. //",
+    "start": 169.6,
+    "end": 175.8
+   }
+  ],
+  "phrases": [
+   {
+    "en": "When it comes to + N / V-ing",
+    "zh": "說到……、談到……（to 是介系詞）",
+    "example": "When it comes to learning English, practice is the key."
+   },
+   {
+    "en": "a force for good",
+    "zh": "一股正面的力量；帶來好影響的人或事",
+    "example": "Our volunteer club has become a force for good in our town."
+   }
+  ],
+  "respond": {
+   "promptEn": "What is one thing you have done (or want to do) to be a force for good in your school or community? Answer in one sentence.",
+   "promptZh": "你曾經做過（或想做）什麼事，讓學校或社區變得更好？用一句英文回答。（可以用 I have always tried to… 或 When it comes to helping others, I…）",
+   "starters": [
+    "I have always tried to …",
+    "When it comes to helping others, I …",
+    "Last year I participated in …"
+   ]
+  }
+ },
+ "vocab": [
+  {
+   "word": "participate (in)",
+   "pos": "v.",
+   "zh": "參加、參與",
+   "example": "More than 200 students participated in the school sports day."
+  },
+  {
+   "word": "seek (sought, sought)",
+   "pos": "v.",
+   "zh": "尋求、試圖、努力爭取",
+   "example": "Many young people seek advice from their teachers before choosing a school."
+  },
+  {
+   "word": "survive",
+   "pos": "v.",
+   "zh": "活下來、倖存、撐過",
+   "example": "Only three people survived the plane crash."
+  },
+  {
+   "word": "thrive",
+   "pos": "v.",
+   "zh": "茁壯成長、興旺、蓬勃發展",
+   "example": "These plants thrive in warm and wet weather."
+  },
+  {
+   "word": "contribute (to)",
+   "pos": "v.",
+   "zh": "貢獻、捐助；促成",
+   "example": "Everyone in our group contributed to the science project."
+  }
+ ],
+ "grammar": {
+  "title": "現在完成式 vs 過去簡單式：in the last few days / over the past… / since / for",
+  "explanationZh": "會考時態題每年必考，106 年「in the last few days」那題全國答對率只有 46%！\n① 一直延續到「現在」的時間 → 現在完成式 have/has＋p.p.：in the last few days、over the past two months、so far、since＋過去時間、for＋一段時間（到現在還在）。\n② since 的陷阱：since 後面的子句用「過去式」（since he came to Taiwan），主要子句才用完成式（He hasn't seen them）。\n③ 已經結束的時間 → 過去簡單式：yesterday、last week、in 2023、… ago、when I was little。⚠️ 有 ago 就不能用完成式（✗ I have seen it two days ago）。\n④ 還沒做、等一下才要做 → haven't＋p.p.：I haven't seen it. I'll watch it this Saturday.\n🔑 判斷法：找「時間線索」——這段時間到現在還沒結束 → 完成式；已經結束 → 過去式。\n⭐ B2 加分：have been＋adj. 很常見：Things have been so hard for us.（蕭美琴原句）",
+  "examples": [
+   {
+    "en": "The weather has been rainy and cloudy in the last few days. I hope the sun will come out soon.",
+    "noteZh": "106 會考：in the last few days 到現在 → has been（答對率 46%）"
+   },
+   {
+    "en": "Tom has lost ten pounds over the past two months. He looks much thinner now.",
+    "noteZh": "104 會考：over the past two months＋looks thinner now → has lost"
+   },
+   {
+    "en": "Taiwan has always sought to be a force for good in the world.",
+    "noteZh": "蕭美琴原句：always＋完成式＝「一直以來都……」"
+   }
+  ],
+  "practice": [
+   {
+    "q": "My cousin moved to Canada in 2023. Since then, she ___ English every day.",
+    "options": [
+     "speaks",
+     "spoke",
+     "has spoken",
+     "is going to speak"
+    ],
+    "answer": 2,
+    "explanationZh": "Since then＝從 2023 年那時起到現在 → 現在完成式 has spoken。spoke 是已結束的過去；speaks 只說習慣、沒有「從那時到現在」；is going to speak 是未來。"
+   }
+  ]
+ },
+ "useOfEnglish": {
+  "type": "Part 1",
+  "instructionZh": "選出最適合每個空格的答案（多選克漏字）。",
+  "text": "Our school's volunteer club {1} a lot since it started three years ago. When it comes to {2} people in our community, the members never say no. Last month, more than fifty students {3} in a beach clean-up in Keelung. They also planted trees and flowers behind the gym, and thanks to their care, the little garden is now {4}, full of flowers and butterflies.",
+  "gaps": [
+   {
+    "n": 1,
+    "options": [
+     "has grown",
+     "grew",
+     "grows",
+     "was growing"
+    ],
+    "answer": "has grown",
+    "explanationZh": "since it started three years ago＝從三年前到現在 → 現在完成式 has grown。⚠️ since 後面的子句用過去式 started，主要子句才用完成式。"
+   },
+   {
+    "n": 2,
+    "options": [
+     "help",
+     "to help",
+     "helped",
+     "helping"
+    ],
+    "answer": "helping",
+    "explanationZh": "When it comes to＋V-ing：這裡的 to 是介系詞，後面接動名詞 helping，不能接原形 help。"
+   },
+   {
+    "n": 3,
+    "options": [
+     "have participated",
+     "participated",
+     "participate",
+     "are participating"
+    ],
+    "answer": "participated",
+    "explanationZh": "Last month＝已經結束的時間 → 過去簡單式 participated。有 last month、ago、yesterday 就不能用完成式！"
+   },
+   {
+    "n": 4,
+    "options": [
+     "surviving",
+     "sinking",
+     "seeking",
+     "thriving"
+    ],
+    "answer": "thriving",
+    "explanationZh": "full of flowers and butterflies＝長得非常好 → thriving（茁壯、興旺）。surviving 只是「勉強活著」；sinking 下沉；seeking 尋求。"
+   }
+  ]
+ },
+ "quiz": [
+  {
+   "id": "q1",
+   "q": "The weather ___ rainy and cloudy in the last few days. I hope the sun will come out soon.（106會考#12）",
+   "options": [
+    "had been",
+    "will be",
+    "has been",
+    "would be"
+   ],
+   "answer": 2,
+   "explanationZh": "in the last few days＝最近幾天「到現在」→ 現在完成式 has been。had been 是過去完成式（要有另一個過去時間點）；will be / would be 意思不合。全國答對率只有 46%！"
+  },
+  {
+   "id": "q2",
+   "q": "Paul misses his parents a lot. He ___ them since he came to work in Taiwan a year ago.（110會考#5）",
+   "options": [
+    "didn't see",
+    "doesn't see",
+    "won't see",
+    "hasn't seen"
+   ],
+   "answer": 3,
+   "explanationZh": "since＋過去式子句（he came…）→ 主要子句用現在完成式 hasn't seen（從那時到現在都沒見到）。⚠️ 別被 a year ago 騙去選過去式：ago 屬於 since 子句，不是主要子句。"
+  },
+  {
+   "id": "q3",
+   "q": "I can't tell you what I think of the movie because I ___ it. I'll probably watch it this Saturday.（113會考#15）",
+   "options": [
+    "haven't seen",
+    "am not seeing",
+    "don't see",
+    "won't see"
+   ],
+   "answer": 0,
+   "explanationZh": "到現在還沒看過、星期六才要看 → haven't seen（現在完成式表示「到目前為止還沒」）。won't see 和後面「星期六會看」矛盾；don't see / am not seeing 不表示經驗。"
+  },
+  {
+   "id": "q4",
+   "q": "Over the years, Taiwan has always ___ to be a force for good in the world.",
+   "options": [
+    "seeked",
+    "sought",
+    "seeking",
+    "saught"
+   ],
+   "answer": 1,
+   "explanationZh": "has always＋過去分詞 → seek 的三態是 seek–sought–sought，所以是 sought。seeked、saught 都不是真的字（拼字陷阱）；seeking 不能接在 has 後面。"
+  },
+  {
+   "id": "q5",
+   "q": "The little cat was lost in the mountains for five days without food, but luckily it ___.",
+   "options": [
+    "thrived",
+    "contributed",
+    "participated",
+    "survived"
+   ],
+   "answer": 3,
+   "explanationZh": "五天沒食物、幸好「活下來了」→ survived。thrived 是「長得很好、興旺」，餓了五天不會 thrive；contributed 貢獻、participated 參加，意思不合。"
+  },
+  {
+   "id": "q6",
+   "q": "When it comes to ___ money for the school trip, Amy always has great ideas.（phrase: when it comes to (會考 to+V-ing 陷阱)）",
+   "options": [
+    "raise",
+    "to raise",
+    "raising",
+    "raised"
+   ],
+   "answer": 2,
+   "explanationZh": "When it comes to 的 to 是介系詞 → 後面接 V-ing：raising。⚠️ 看到 to 就選原形是會考常見陷阱（look forward to / be used to / contribute to 也一樣）。"
+  }
+ ]
+};
+</script>
+<style>
+:root{--paper:#f0ece0;--paper2:#e8e1d0;--brown:#6b4a35;--sage:#8a9a7b;--ink:#3a3632;--mute:#857a6e;
+--serif:Georgia,"Times New Roman","Noto Serif TC",serif;--sans:"PingFang TC","Noto Sans TC",-apple-system,"Helvetica Neue",sans-serif;
+--wob:255px 15px 225px 15px/15px 225px 15px 255px}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;font-family:var(--sans);color:var(--ink);line-height:1.8;-webkit-text-size-adjust:100%;
+background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .22 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");letter-spacing:.01em}
+.hero{max-width:760px;margin:auto;padding:max(28px,env(safe-area-inset-top)) 24px 0;text-align:center}
+.art{height:170px;background:url(assets/monkey.jpg) no-repeat center 82%/auto 380px;mix-blend-mode:multiply;
+-webkit-mask-image:radial-gradient(ellipse 55% 60% at 50% 55%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 55% 60% at 50% 55%,#000 55%,transparent 100%)}
+h1{font-family:var(--serif);font-weight:400;text-transform:uppercase;letter-spacing:.32em;font-size:1.25rem;color:var(--brown);margin:14px 0 4px}
+.sub{font-size:.85rem;color:var(--mute);letter-spacing:.08em}
+header{position:sticky;top:0;z-index:10;background:rgba(240,236,224,.93);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:10px 20px;padding-top:max(10px,env(safe-area-inset-top));margin-top:18px}
+header::after{content:"";position:absolute;left:8%;right:8%;bottom:0;height:1px;background:var(--brown);opacity:.35;border-radius:50%;transform:rotate(-.2deg)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:auto;flex-wrap:wrap}
+.live{font-family:var(--serif);color:var(--brown);font-size:1rem;letter-spacing:.06em}
+.live b{font-size:1.35rem;font-weight:400}
+.timer{display:flex;align-items:center;gap:8px}
+.time{font-family:var(--serif);font-variant-numeric:tabular-nums;font-size:1.2rem;min-width:58px;text-align:right;color:var(--ink);letter-spacing:.05em}
+.time.done{color:var(--brown);text-decoration:underline wavy var(--sage)}
+main{max-width:760px;margin:auto;padding:28px 22px 100px}
+section{padding:34px 4px 40px;margin:0}
+section+section{border-top:0}
+section::before{content:"";display:block;width:56px;height:6px;margin:0 auto 34px;background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 6'%3E%3Cpath d='M1 3.5c9-2 17 1.5 27-.5s17-1.5 27 .5' fill='none' stroke='%238a9a7b' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E")}
+section:first-child::before{display:none}
+h2{font-family:var(--serif);font-weight:400;font-size:.82rem;text-transform:uppercase;letter-spacing:.28em;color:var(--brown);margin:0 0 22px;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+h2 .t{position:relative;padding-bottom:8px}
+h2 .t::after{content:"";position:absolute;left:0;bottom:0;width:34px;height:1.5px;background:var(--brown);opacity:.7;border-radius:2px 40% 3px 50%;transform:rotate(-1deg)}
+h3{font-family:var(--serif);font-weight:400;font-size:1.02rem;letter-spacing:.04em;color:var(--ink);margin:22px 0 8px}
+.badge{font-family:var(--sans);font-size:.72rem;letter-spacing:.1em;color:var(--sage);text-transform:none;border:1px solid var(--sage);padding:0 9px;border-radius:var(--wob)}
+.zh{color:var(--mute);font-size:.92rem}
+p{margin:.7em 0}
+button{font:inherit;font-size:.95rem;cursor:pointer;border:1.2px solid var(--brown);border-radius:var(--wob);padding:7px 16px;background:transparent;color:var(--brown);letter-spacing:.06em;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .2s}
+button:active{background:var(--paper2)}
+button.solid{background:var(--brown);color:var(--paper)}
+button.ghost{border-color:rgba(107,74,53,.4)}
+button.sm{padding:3px 11px;font-size:.85rem}
+button:disabled{cursor:default}
+.prompt{font-family:var(--serif);font-size:1.12rem;line-height:1.7;padding:6px 0 6px 18px;border-left:1.5px solid var(--sage);border-radius:0 0 0 30% / 0 0 0 4%}
+.model{margin-top:16px;padding:16px 18px;border:1px dashed rgba(107,74,53,.45);border-radius:var(--wob);font-family:var(--serif)}
+ul{padding-left:1.2em}
+ul.phr{padding-left:0;list-style:none;margin:8px 0 14px}
+ul.phr li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(107,74,53,.15)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:16px}
+.flip{perspective:900px;height:200px;cursor:pointer}
+.inner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+.flip.on .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;border:1.2px solid rgba(107,74,53,.5);border-radius:var(--wob);background:rgba(250,247,239,.6);padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;font-size:.9rem}
+.face.back{transform:rotateY(180deg);background:rgba(232,225,208,.55);justify-content:space-between}
+.word{font-family:var(--serif);font-size:1.3rem;color:var(--brown);letter-spacing:.03em}
+.pos{font-size:.78rem;color:var(--sage);letter-spacing:.1em}
+.ex{padding:12px 0;border-bottom:1px solid rgba(107,74,53,.15)}
+.ex b,.gq>b{font-family:var(--serif);font-weight:400;font-size:1.04rem}
+.uoetext{font-family:var(--serif);font-size:1.08rem;line-height:2.1}
+.gap{display:inline-block;min-width:3.2em;text-align:center;color:var(--mute);border-bottom:1.2px solid var(--brown);border-radius:0 0 40% 60%/0 0 3px 2px;padding:0 4px;line-height:1.5}
+.gap.ok{color:var(--sage);border-color:var(--sage)}
+.gap.bad{color:var(--brown);font-style:italic}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.opt{text-align:left;border-color:rgba(107,74,53,.35);color:var(--ink);padding:10px 14px}
+.opt.ok{border-color:var(--sage);background:rgba(138,154,123,.18);color:var(--ink)}
+.opt.bad{border-color:var(--brown);background:rgba(107,74,53,.1);text-decoration:line-through;text-decoration-color:rgba(107,74,53,.6)}
+.fb{font-size:.9rem;padding:8px 2px 4px;color:var(--mute)}
+.fb.ok b{color:var(--sage)} .fb.bad b{color:var(--brown)}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;color:var(--mute)}
+.qscore{font-family:var(--serif);color:var(--brown);font-size:1.1rem;letter-spacing:.05em}
+.bar{height:3px;background:rgba(107,74,53,.13);border-radius:3px;overflow:hidden;margin:8px 0 26px}
+.bar>div{height:100%;background:var(--sage);width:0;transition:width .3s}
+.gq{margin-bottom:26px}
+.endart{width:150px;height:110px;margin:0 auto;background:url(assets/monkey.jpg) no-repeat center 81%/auto 260px;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(closest-side,#000 65%,transparent);mask-image:radial-gradient(closest-side,#000 65%,transparent)}
+.score{font-family:var(--serif);text-align:center;color:var(--brown);font-size:4.6rem;line-height:1;margin:16px 0 4px;letter-spacing:.02em}
+.score small{font-size:1.2rem;color:var(--mute)}
+.scorelbl{text-align:center;text-transform:uppercase;letter-spacing:.3em;font-size:.72rem;color:var(--mute);font-family:var(--serif)}
+.subscores{display:flex;justify-content:center;gap:36px;margin:22px 0 10px;text-align:center}
+.subscores div{font-family:var(--serif);font-size:1.5rem;color:var(--ink)}
+.subscores span{display:block;font-family:var(--sans);font-size:.78rem;color:var(--mute);letter-spacing:.1em}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:.88rem;background:rgba(232,225,208,.6);color:var(--ink);padding:12px 14px;border:1px dashed rgba(107,74,53,.45);border-radius:var(--wob);word-break:break-all;margin:10px 0 14px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.hidden{display:none}
+input{font:inherit;padding:8px 4px;border:none;border-bottom:1.2px solid var(--brown);background:transparent;color:var(--ink);border-radius:0;outline:none}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:760px;margin:8px auto 0;font-size:.8rem}
+.steps button{padding:2px 10px;font-size:.8rem;border-color:rgba(107,74,53,.35);color:var(--mute)}
+.steps button.done{border-color:var(--sage);color:var(--sage)}
+.steps button.cur{background:var(--brown);color:var(--paper);border-color:var(--brown)}
+.steps button.locked{opacity:.5;border-style:dashed}
+.yt{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000}.yt>div,.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.stress{color:var(--brown);text-decoration:underline wavy var(--sage);font-weight:400}
+.steps .arr{color:var(--mute)}
+.steplbl{text-align:center;font-family:var(--serif);color:var(--brown);letter-spacing:.12em;font-size:.85rem;margin-top:4px}
+.next{margin-top:26px;width:100%}
+button.solid:disabled{opacity:.4}
+.lock{text-align:center;padding:40px 10px;font-size:1.05rem;color:var(--brown);border:1.2px dashed rgba(107,74,53,.45);border-radius:var(--wob)}
+.req{font-size:.85rem;color:var(--sage);margin-top:10px}
+section.step-hide{display:none}
+@media(max-width:480px){.opts{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr;gap:12px}.flip{height:220px}.art{height:150px}h1{letter-spacing:.22em;font-size:1.1rem}.score{font-size:3.8rem}}
+@media(min-width:768px){main{padding-left:40px;padding-right:40px}.art{height:200px;background-size:auto 440px}}
+</style>
+</head>
+<body>
+<div class="hero"><div class="art" role="img" aria-label="monkey reading a book"></div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
+<header><div class="hrow">
+  <div class="live" id="live">得分 <b id="liveScore">0</b> / ?</div>
+  <div class="timer"><span class="time" id="time"></span><button class="sm solid" id="tbtn">開始</button><button class="sm ghost" id="treset">重設</button></div>
+</div>
+<nav class="steps" id="steps"></nav><div class="steplbl" id="steplbl"></div></header>
+<main>
+  <section id="s-speak"></section>
+  <section id="s-idol"></section>
+  <section id="s-vocab"></section>
+  <section id="s-gram"></section>
+  <section id="s-uoe"></section>
+  <section id="s-lock"></section>
+  <section id="s-quiz"></section>
+  <section id="s-end" class="hidden"></section>
+</main>
+<script>
+(function(){
+const L = LESSON, $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'fce-lesson-' + L.date;
+let state = {}; try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) {}
+state.quiz = state.quiz || {}; state.uoe = state.uoe || {};
+state.learn = state.learn || {}; const LN = state.learn;
+LN.flipped = LN.flipped || []; LN.practice = LN.practice || {};
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} };
+
+/* speech */
+let voice = null;
+function pickVoice(){ const vs = window.speechSynthesis ? speechSynthesis.getVoices() : []; voice = vs.find(v=>v.lang==='en-GB') || vs.find(v=>/^en[-_]GB/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null; }
+if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(t){ if(!window.speechSynthesis){ alert('此瀏覽器不支援語音朗讀'); return; } speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='en-GB'; if(voice) u.voice=voice; u.rate=0.92; speechSynthesis.speak(u); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if(b){ e.stopPropagation(); speak(b.getAttribute('data-say')); } });
+
+/* header + timer */
+$('title').textContent = 'FCE · ' + L.date; document.title = `FCE 每日 ${L.minutes||8} 分鐘英文`;
+$('subtitle').textContent = L.topic + '｜' + L.topicZh;
+let left = state.timeLeft != null ? state.timeLeft : (L.minutes||8)*60, tid = null;
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+function drawT(){ $('time').textContent = fmt(left); $('time').classList.toggle('done', left<=0); }
+$('tbtn').onclick = () => { if(tid){ clearInterval(tid); tid=null; $('tbtn').textContent='繼續'; return; }
+  if(left<=0) return; $('tbtn').textContent='暫停';
+  tid = setInterval(()=>{ left--; state.timeLeft=left; drawT(); if(left%5===0) save(); if(left<=0){ clearInterval(tid); tid=null; $('tbtn').textContent='時間到'; save(); } },1000); };
+$('treset').onclick = () => { clearInterval(tid); tid=null; left=(L.minutes||8)*60; state.timeLeft=left; save(); $('tbtn').textContent='開始'; drawT(); };
+drawT();
+
+/* 1 speaking (skipped when idol present) */
+if (!L.idol) {
+const S = L.speaking;
+$('s-speak').innerHTML = `<h2><span class="t">I · 口說 Speaking</span> <span class="badge">${esc(S.part)}</span></h2>
+<div class="prompt">${esc(S.prompt)} <button class="sm ghost" data-say="${esc(S.prompt)}">🔊</button></div>
+${(S.followUps||[]).length?`<p class="zh">延伸問題：</p><ul>${S.followUps.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:''}
+<p class="zh">💡 ${esc(S.tipZh||'')}</p>
+<p class="zh">先自己大聲回答一次（約 30 秒），再看範例。</p>
+<h3>範例回答</h3>
+<div class="model" id="model"><p>${esc(S.modelAnswer)}</p><div class="btns"><button class="sm" id="listenModel" data-say="${esc(S.modelAnswer)}">🔊 聆聽範例</button><button class="sm ghost" id="readAloud">🗣 我唸過了</button></div></div>
+<h3>實用句型</h3>
+<ul class="phr">${S.phrases.map(p=>`<li><div><b>${esc(p.en)}</b><div class="zh">${esc(p.zh)}</div></div><button class="sm ghost" data-say="${esc(p.en)}">🔊</button></li>`).join('')}</ul>
+<button class="ghost sm" data-say="${esc(S.phrases.map(p=>p.en).join('. '))}">🔊 全部句型</button>`;
+$('s-speak').insertAdjacentHTML('beforeend', `<div class="req" id="speakReq"></div><button class="solid next" id="next1">學會了，下一步</button>`);
+function drawSpeak(){ const ok = !!(LN.listened||LN.readAloud); $('next1').disabled = !ok;
+  $('speakReq').textContent = ok ? '✓ 已完成：' + (LN.listened?'聽過範例 ':'') + (LN.readAloud?'唸過範例':'') : '請先聆聽範例一次，或大聲唸完範例後點「我唸過了」。'; }
+$('listenModel').addEventListener('click', ()=>{ LN.listened = true; save(); drawSpeak(); });
+$('readAloud').onclick = () => { LN.readAloud = true; save(); drawSpeak(); };
+$('next1').onclick = () => { LN.s1 = true; save(); goId(L.idol?'s-idol':'s-vocab'); };
+drawSpeak();
+} else $('s-speak').remove();
+
+/* 1 idol (optional) */
+const I = L.idol;
+if (I) {
+  const mark = t => esc(t).replace(/\*([^*]+)\*/g,'<b class="stress">$1</b>');
+  const plain = t => String(t).replace(/\*/g,'').replace(/\s*\/+\s*/g,' ').replace(/\s+/g,' ').trim();
+  const ch = (I.chunks||[]).map(c => typeof c==='string' ? {text:c} : c);
+  const C = (I.clip && I.clip.youtubeId) ? I.clip : null;
+  const ytSrc = (st,en,ap) => C ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(C.youtubeId)}?start=${Math.floor(st)}&end=${Math.ceil(en)}&playsinline=1&rel=0&modestbranding=1${ap?'&autoplay=1':''}` : '';
+  $('s-idol').innerHTML = `<h2><span class="t">I · 原聲跟讀 Learn from your idol</span> <span class="badge">${esc(I.personZh||'')} ${esc(I.person)}</span></h2>
+<p class="zh">${esc(I.introZh||'')}</p>
+<div class="prompt">${esc(I.excerpt)}</div>
+<p class="zh" style="font-size:.8rem">✅ 真實原話，逐字稿來源：<a href="${esc(I.sourceUrl)}" target="_blank" rel="noopener" style="color:var(--brown)">${esc(I.sourceLabel||I.sourceUrl)}</a>${I.videoUrl?`<br>▶ <a href="${esc(I.videoUrl)}" target="_blank" rel="noopener" style="color:var(--brown)">看原影片</a>${I.videoNote?'（'+esc(I.videoNote)+'）':''}`:''}</p>
+${C?`<h3>🎧 聽本人原音 Real voice</h3><div class="yt"><div id="ytP"><iframe src="${ytSrc(C.start,C.end,0)}" title="${esc(I.person)} video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen playsinline></iframe></div></div>
+<div class="btns" style="margin-top:8px"><button class="sm idolclip" data-s="${+C.start}" data-e="${+C.end}">🔁 重播原音</button></div>`:''}
+<h3>跟讀 Shadowing</h3><p class="zh">${C?'按 ▶ 聽本人原音的那一段，馬上跟著唸。':'按 ▶ 聽一段（<b>電腦發音</b>，非本人聲音），馬上跟著唸。'}<b class="stress">粗體</b>＝重音，/＝短停，//＝長停。</p>
+${ch.map(c=>{ const real = C && c.start!=null && c.end!=null;
+  return `<div class="ex">${real?`<button class="sm idolplay idolclip" data-s="${+c.start}" data-e="${+c.end}">▶ 原音</button>`:`<button class="sm ghost idolplay" data-say="${esc(c.say||plain(c.text))}">▶ 電腦發音</button>`} <b>${mark(c.text)}</b></div>`; }).join('')}
+<div class="btns" style="margin-top:10px">${C?`<button class="sm ghost idolplay idolclip" data-s="${+C.start}" data-e="${+C.end}">▶ 整段原音</button>`:`<button class="sm ghost idolplay" data-say="${esc(ch.map(c=>c.say||plain(c.text)).join(' '))}">▶ 整段（電腦發音）</button>`}</div>
+<h3>偷學好句型</h3>
+${(I.phrases||[]).map(p=>`<div class="ex"><b>${esc(p.en)}</b> <button class="sm ghost" data-say="${esc(p.example)}">🔊</button><div class="zh">${esc(p.zh)}</div><div style="font-style:italic">✏️ ${esc(p.example)}</div></div>`).join('')}
+${I.respond?`<h3>🗣 換你說 Your turn</h3><div class="prompt">${esc(I.respond.promptEn)} <button class="sm ghost" data-say="${esc(I.respond.promptEn)}">🔊</button></div>
+<p class="zh">${esc(I.respond.promptZh||'')}（大聲用 1–2 句回答，可用下面的開頭）</p>
+<ul class="phr">${(I.respond.starters||[]).map(t=>`<li><div><b>${esc(t)}</b></div></li>`).join('')}</ul>`:''}
+<div class="req" id="idolReq"></div><button class="solid next" id="nextI">學會了，下一步</button>`;
+  const drawIdol = () => { $('nextI').disabled = !LN.idolPlayed; $('idolReq').textContent = LN.idolPlayed ? '✓ 已跟讀' : '請至少按一次 ▶ 播放並跟著唸。'; };
+  const markPlayed = () => { if(!LN.idolPlayed){ LN.idolPlayed = true; save(); drawIdol(); } };
+  $('s-idol').addEventListener('click', e => { if(e.target.closest('.idolplay,.idolclip')) markPlayed(); }, true);
+  if (C) {
+    // Real-voice clip: YouTube IFrame API when available; plain iframe (src swap) as fallback. Never TTS for the person.
+    let yp = null, endT = null, poll = null;
+    const playSeg = (st,en) => {
+      if (window.speechSynthesis) speechSynthesis.cancel();
+      if (yp && yp.loadVideoById) { endT = en; yp.loadVideoById({videoId:C.youtubeId, startSeconds:st, endSeconds:en}); }
+      else { const h = $('ytP'), f = h && (h.tagName==='IFRAME' ? h : h.querySelector('iframe')); if (f) f.src = ytSrc(st,en,1); }
+    };
+    $('s-idol').addEventListener('click', e => { const b = e.target.closest('.idolclip'); if(b){ e.stopPropagation(); playSeg(+b.dataset.s, +b.dataset.e); } });
+    const initYT = () => { try {
+      yp = new YT.Player('ytP', { videoId: C.youtubeId, playerVars: { start: Math.floor(C.start), end: Math.ceil(C.end), playsinline: 1, rel: 0, modestbranding: 1 },
+        host: 'https://www.youtube-nocookie.com',
+        events: { onStateChange: ev => { if (ev.data === 1) { markPlayed();
+            clearInterval(poll); poll = setInterval(()=>{ try { if(endT!=null && yp.getCurrentTime() >= endT){ yp.pauseVideo(); clearInterval(poll); } } catch(_){} }, 200); }
+          else clearInterval(poll); } } });
+      } catch(_) { yp = null; } };
+    if (window.YT && YT.Player) initYT();
+    else { const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { if(prev) prev(); initYT(); };
+      const sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(sc); }
+  }
+  $('nextI').onclick = () => { LN.si = true; save(); goId('s-vocab'); };
+  drawIdol();
+}
+
+/* 2 vocab */
+$('s-vocab').innerHTML = `<h2><span class="t">II · 單字 Vocabulary</span> <span class="badge">${L.vocab.length} 個</span></h2><p class="zh">點卡片翻面看中文與例句（每張都要翻過，也可以按 🔊 聆聽）。</p><div class="qscore" id="vprog" style="margin:0 0 14px"></div>
+<div class="grid">${L.vocab.map((v,i)=>`<div class="flip" data-i="${i}"><div class="inner">
+<div class="face"><div class="word">${esc(v.word)}</div><div class="pos">${esc(v.pos)}</div><button class="sm ghost" style="margin-top:10px" data-say="${esc(v.word)}">🔊</button></div>
+<div class="face back"><div><b>${esc(v.word)}</b> <span class="zh">${esc(v.zh)}</span></div><div style="font-style:italic">${esc(v.example)}</div><button class="sm ghost" data-say="${esc(v.example)}">🔊 例句</button></div>
+</div></div>`).join('')}</div>`;
+$('s-vocab').insertAdjacentHTML('beforeend', `<button class="solid next" id="next2">學會了，下一步</button>`);
+function drawVocab(){ const n = LN.flipped.length; $('vprog').textContent = `已學 ${n}/${L.vocab.length}`; $('next2').disabled = n < L.vocab.length;
+  document.querySelectorAll('.flip').forEach(c => c.querySelector('.face').style.borderColor = LN.flipped.includes(+c.dataset.i) ? 'var(--sage)' : ''); }
+document.querySelectorAll('.flip').forEach(c => c.onclick = () => { c.classList.toggle('on'); const i = +c.dataset.i; if(!LN.flipped.includes(i)){ LN.flipped.push(i); save(); } drawVocab(); });
+$('next2').onclick = () => { LN.s2 = true; save(); goId('s-gram'); };
+drawVocab();
+
+/* 3 grammar */
+const G = L.grammar, GP = (G.practice||[]).filter(q=>q&&q.options&&q.options.length);
+$('s-gram').innerHTML = `<h2><span class="t">III · 文法 Grammar</span></h2><h3>${esc(G.title)}</h3><p>${esc(G.explanationZh)}</p>
+${G.examples.map(x=>`<div class="ex"><b>${esc(x.en)}</b> <button class="sm ghost" data-say="${esc(x.en)}">🔊</button><div class="zh">${esc(x.noteZh)}</div></div>`).join('')}
+${GP.length?`<h3>小練習（不計分）</h3>${GP.map((q,i)=>`<div class="gq" id="gp${i}"><b>${i+1}. ${esc(q.q)}</b><div class="opts">${q.options.map((o,j)=>`<button class="opt" data-p="${i}" data-j="${j}">${'ABCD'[j]}. ${esc(o)}</button>`).join('')}</div><div class="fbx"></div></div>`).join('')}`:''}
+<div class="req" id="gramReq"></div>${GP.length?'':'<button class="ghost" id="gotIt" style="margin-top:14px">👌 我看懂了</button>'}
+<button class="solid next" id="next3">學會了，下一步</button>`;
+function answerP(i,j){ const q=GP[i], box=$('gp'+i), ok=j===q.answer; LN.practice[i]=j; save();
+  box.querySelectorAll('.opt').forEach((b,k)=>{ b.disabled=true; if(k===q.answer) b.classList.add('ok'); else if(k===j) b.classList.add('bad'); });
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'<b>✓ 正確</b>':'<b>✗ 正確答案：'+esc(q.options[q.answer])+'</b>'} ${esc(q.explanationZh||'')}</div>`; drawGram(); }
+function gramOk(){ return GP.length ? GP.every((q,i)=>i in LN.practice) : !!LN.gotIt; }
+function drawGram(){ const ok=gramOk(); $('next3').disabled=!ok; $('gramReq').textContent = ok?'✓ 完成':(GP.length?`完成 ${Object.keys(LN.practice).length}/${GP.length} 題小練習後即可繼續。`:'看完說明與例句後，點「我看懂了」。'); }
+$('s-gram').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerP(+b.dataset.p,+b.dataset.j); });
+if($('gotIt')) $('gotIt').onclick = () => { LN.gotIt = true; save(); drawGram(); };
+$('next3').onclick = () => { LN.s3 = true; save(); goId('s-uoe'); };
+Object.keys(LN.practice).forEach(i=>{ if(GP[i]) answerP(+i, LN.practice[i]); }); drawGram();
+
+/* 4 use of english */
+const U = L.useOfEnglish;
+const txt = esc(U.text).replace(/\{(\d+)\}/g, (m,n)=>`<span class="gap" id="gap${n}">(${n})</span>`);
+$('s-uoe').innerHTML = `<h2><span class="t">IV · Use of English</span> <span class="badge">${esc(U.type)}</span></h2><p class="zh">${esc(U.instructionZh)}</p><p class="uoetext">${txt}</p><div class="qscore" id="uprog" style="margin:6px 0 18px"></div>
+${U.gaps.map(g=>`<div class="gq" id="ug${g.n}"><b>(${g.n})</b>${g.options?`<div class="opts">${g.options.map((o,i)=>`<button class="opt" data-n="${g.n}" data-v="${esc(o)}">${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`:
+`<div style="display:flex;gap:8px;margin:6px 0"><input data-n="${g.n}" autocapitalize="off" autocorrect="off" style="flex:1"><button class="sm" data-chk="${g.n}">檢查</button></div>`}<div class="fbx"></div></div>`).join('')}`;
+function uoeScore(){ return U.gaps.filter(g=>g.n in state.uoe && String(state.uoe[g.n]).trim().toLowerCase()===g.answer.toLowerCase()).length; }
+function uprog(){ const n=U.gaps.filter(g=>g.n in state.uoe).length; $('uprog').textContent = `Use of English 得分 ${uoeScore()} / ${U.gaps.length}` + (n<U.gaps.length?`（已作答 ${n}）`:'');
+  const nb=$('next4'); if(nb){ nb.disabled = n<U.gaps.length; $('uoeReq').textContent = n<U.gaps.length ? `完成全部 ${U.gaps.length} 格後即可解鎖測驗（已作答 ${n}）。` : '✓ 完成，可以開始測驗了！'; } }
+function answerGap(n, v){
+  const g = U.gaps.find(x=>x.n==n); if(!g) return;
+  const ok = v.trim().toLowerCase() === g.answer.toLowerCase();
+  state.uoe[n] = v; save(); setTimeout(uprog);
+  const box = $('ug'+n), gap = $('gap'+n);
+  box.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; if(b.dataset.v===g.answer) b.classList.add('ok'); else if(b.dataset.v===v) b.classList.add('bad'); });
+  const inp = box.querySelector('input'); if(inp){ inp.value=v; inp.disabled=true; }
+  if(gap){ gap.textContent = g.answer; gap.classList.add(ok?'ok':'bad'); }
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'<b>✓ 正確</b>':'<b>✗ 正確答案：'+esc(g.answer)+'</b>'} ${esc(g.explanationZh||'')}</div>`;
+}
+$('s-uoe').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b&&!b.disabled) answerGap(b.dataset.n,b.dataset.v);
+  const c=e.target.closest('[data-chk]'); if(c){ const i=$('ug'+c.dataset.chk).querySelector('input'); if(i.value.trim()) answerGap(c.dataset.chk,i.value); } });
+$('s-uoe').insertAdjacentHTML('beforeend', `<div class="req" id="uoeReq"></div><button class="solid next" id="next4">完成學習，開始測驗 →</button>`);
+$('next4').onclick = () => { LN.s4 = true; save(); goId('s-quiz'); };
+Object.keys(state.uoe).forEach(n=>answerGap(n,state.uoe[n])); uprog();
+
+/* 5 quiz */
+const Q = L.quiz;
+$('s-quiz').innerHTML = `<h2><span class="t">V · 小測驗 Quiz</span></h2><div class="qhead"><span id="qprog"></span><span class="qscore" id="qscore"></span></div><div class="bar"><div id="qbar"></div></div>
+${Q.map((q,i)=>`<div class="gq" id="qq${i}"><b>${i+1}. ${esc(q.q)}</b><div class="opts">${q.options.map((o,j)=>`<button class="opt" data-q="${i}" data-j="${j}">${'ABCD'[j]}. ${esc(o)}</button>`).join('')}</div><div class="fbx"></div></div>`).join('')}
+<button id="finish" class="solid" style="width:100%">完成並查看結果</button>`;
+function answerQ(i, j){
+  const q = Q[i], box = $('qq'+i), ok = j===q.answer;
+  state.quiz[q.id] = j; save();
+  box.querySelectorAll('.opt').forEach((b,k)=>{ b.disabled=true; if(k===q.answer) b.classList.add('ok'); else if(k===j) b.classList.add('bad'); });
+  box.querySelector('.fbx').innerHTML = `<div class="fb ${ok?'ok':'bad'}">${ok?'<b>✓ 正確</b>':'<b>✗ 正確答案：'+esc(q.options[q.answer])+'</b>'} ${esc(q.explanationZh)}</div>`;
+  prog();
+}
+function prog(){ const n = Q.filter(q=>q.id in state.quiz).length; $('qprog').textContent = `進度 ${n}/${Q.length}`; $('qbar').style.width = (n/Q.length*100)+'%'; const c = Q.filter(q=>state.quiz[q.id]===q.answer).length; $('qscore').textContent = `得分 ${c} / ${Q.length}`; $('liveScore').textContent = c; $('live').lastChild.textContent = ' / ' + Q.length; if(n===Q.length) showEnd(); }
+$('s-quiz').addEventListener('click', e=>{ if(!quizUnlocked()) return; const b=e.target.closest('.opt'); if(b&&!b.disabled) answerQ(+b.dataset.q, +b.dataset.j); });
+Q.forEach((q,i)=>{ if(q.id in state.quiz) answerQ(i, state.quiz[q.id]); }); prog();
+$('finish').onclick = () => { if(!quizUnlocked()) return; showEnd(); $('s-end').scrollIntoView({behavior:'smooth'}); };
+
+/* guided steps */
+const STEPS = [null, I?{id:'s-idol',n:'原聲跟讀',k:'si'}:{id:'s-speak',n:'口說',k:'s1'}].concat([{id:'s-vocab',n:'單字',k:'s2'},{id:'s-gram',n:'文法',k:'s3'},{id:'s-uoe',n:'閱讀',k:'s4'},{id:'s-quiz',n:'測驗'}]);
+const QS = STEPS.length-1;  // quiz step number
+if(!I) $('s-idol').remove();
+function unlocked(k){ return k===1 || (k>1 && k<=QS && !!LN[STEPS[k-1].k] && unlocked(k-1)); }
+const quizUnlocked = () => unlocked(QS);
+function goId(id){ go(STEPS.findIndex(s=>s&&s.id===id)); }
+const learnNames = STEPS.slice(1,QS).map(s=>s.n).join('、');
+$('s-lock').innerHTML = `<div class="lock">🔒 先完成學習才能測驗<div class="zh" style="margin-top:8px">依序完成 學習 1–${QS-1}（${learnNames}）後，小測驗才會解鎖。</div></div>`;
+function go(k, noScroll){
+  if(!unlocked(k)) return;
+  LN.step = k; save();
+  for(let i=1;i<=QS;i++){ $(STEPS[i].id).classList.toggle('step-hide', i!==k); }
+  $('s-lock').classList.toggle('step-hide', true);
+  $('s-end').classList.toggle('step-hide', k!==QS);
+  drawSteps(); if(!noScroll) window.scrollTo(0, Math.max(0, $('steps').getBoundingClientRect().top + window.scrollY - 120));
+}
+function drawSteps(){
+  const cur = LN.step||1;
+  $('steps').innerHTML = STEPS.slice(1).map((s,i)=>{ const k=i+1, lock=!unlocked(k), done=k<QS?!!LN[s.k]:!!state.completedAt;
+    return `${k===QS?'<span class="arr">→</span>':''}<button class="${k===cur?'cur':''} ${done?'done':''} ${lock?'locked':''}" data-step="${k}" ${lock?'aria-disabled="true"':''}>${lock?'🔒 ':done?'✓ ':''}${k<QS?k+' ':''}${s.n}</button>`; }).join('');
+  $('steplbl').textContent = cur<QS ? `學習 ${cur}/${QS-1} → 測驗` : '測驗 Quiz';
+}
+$('steps').addEventListener('click', e=>{ const b=e.target.closest('[data-step]'); if(!b) return; const k=+b.dataset.step;
+  if(!unlocked(k)){ if(k===QS){ for(let i=1;i<=QS;i++) $(STEPS[i].id).classList.add('step-hide'); $('s-end').classList.add('step-hide'); $('s-lock').classList.remove('step-hide'); } return; }
+  go(k); });
+go(unlocked(LN.step||1) && (LN.step||1)<=QS ? (LN.step||1) : 1, true);
+window.__fce = { unlocked, quizUnlocked, go, state };
+
+/* end */
+function showEnd(){
+  const missed = Q.filter(q=>state.quiz[q.id]!==q.answer);
+  const score = Q.length - missed.length, uo = uoeScore(), un = U.gaps.length, pts = Math.round((score+uo)/((Q.length+un)||1)*100);
+  state.score = score; state.points = pts; state.uoeScore = uo; state.completedAt = state.completedAt || new Date().toISOString(); save();
+  const code = `FCE-${L.date} quiz:${score}/${Q.length} uoe:${uo}/${un} score:${pts} missed:${missed.length?missed.map(q=>q.id).join(','):'none'}`;
+  const uMiss = U.gaps.filter(g=>!(g.n in state.uoe) || String(state.uoe[g.n]).trim().toLowerCase()!==g.answer.toLowerCase());
+  const e = $('s-end'); e.classList.remove('hidden');
+  e.innerHTML = `<div class="endart" role="img" aria-label="monkey"></div><div class="scorelbl">Today's score</div>
+<div class="score">${pts}<small> / 100</small></div>
+<div class="subscores"><div>${score} / ${Q.length}<span>小測驗 Quiz</span></div><div>${uo} / ${un}<span>Use of English</span></div></div>
+${missed.length?`<h3>需要複習的題目</h3><ul>${missed.map(q=>`<li><b>${esc(q.id)}</b> ${esc(q.q)}<br><span class="zh">${q.id in state.quiz?'你的答案：'+esc(q.options[state.quiz[q.id]])+'；':'未作答；'}正解：${esc(q.options[q.answer])}</span></li>`).join('')}</ul>`:'<p style="text-align:center">小測驗全對，太棒了！</p>'}
+${uMiss.length?`<h3>Use of English 待複習</h3><ul>${uMiss.map(g=>`<li><b>(${g.n})</b> <span class="zh">${g.n in state.uoe?'你的答案：'+esc(state.uoe[g.n])+'；':'未作答；'}正解：${esc(g.answer)}</span></li>`).join('')}</ul>`:''}
+<p class="zh">請複製以下完成碼，貼回家教聊天室：</p><div class="code" id="code">${esc(code)}</div>
+<div class="btns"><button class="solid" id="copy">複製完成碼</button><button class="ghost" id="redo">重做今日課程</button></div>`;
+  $('copy').onclick = () => { const done=()=>{$('copy').textContent='✓ 已複製';};
+    if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(code).then(done,fallback); else fallback();
+    function fallback(){ const t=document.createElement('textarea'); t.value=code; document.body.appendChild(t); t.select(); try{document.execCommand('copy'); done();}catch(x){ alert(code); } t.remove(); } };
+  $('redo').onclick = () => { if(confirm('確定要清除今日進度重新開始？')){ localStorage.removeItem(KEY); location.reload(); } };
+}
+})();
+</script>
+</body>
+</html>
